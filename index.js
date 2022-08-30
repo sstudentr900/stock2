@@ -54,7 +54,7 @@ let getStockDataMonth = function(jsonUrl){
 let getStockData = async function(stockNo){
   let stockData = [];
   //['1110301','1110201','1110101']
-  for(let today of getTimes(2)){   
+  for(let today of getTimes(3)){   
     let jsonUrl = "https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date=" + today + "&stockNo=" + stockNo;
     let array = await getStockDataMonth(jsonUrl)
     stockData = stockData.concat(array)
