@@ -38,7 +38,7 @@ let getStockDataMonth = function(jsonUrl){
       } else {
         let array = jsons.map(json=>{
           return {
-            'Data':json[0].split('/').join(''),
+            'Date':json[0].split('/').join(''),
             'Close':json[3],
             'Hight':json[4],
             'Low':json[5],
@@ -73,7 +73,7 @@ let getkdData = function(stockData){
     let minClose = nineDayData.reduce((pre,cur)=>pre.Close<cur.Close?pre:cur).Close
     let maxClose = nineDayData.reduce((pre,cur)=>pre.Close>cur.Close?pre:cur).Close
     // 今日收盤價
-    let todayClose = nineDayData.at(-1).Close
+    let todayClose = nineDayData[nineDayData.length-1].Close
     //RSV = ( 今日收盤價 - 最近九天的最低價 ) / ( 最近九天的最高價 - 最近九天最低價 )
     let rsv = 100 * (todayClose-minClose) / (maxClose - minClose)
     //K = 2/3 * ( 昨日K值 ) + 1/3 * ( 今日RSV )
@@ -81,15 +81,16 @@ let getkdData = function(stockData){
     //D = 2/3 * ( 昨日D值 ) + 1/3 * ( 今日K值 )
     D = (2/3) * D + (1/3) * K
     return {
-      data: nineDayData.at(-1).Data,
+      date: nineDayData[nineDayData.length-1].Date,
       K: (K).toFixed(2),
       D: (D).toFixed(2)
     }
   }
   stockData.forEach((element,index) => {
-    if(index+1>day){
-      let star = index-day
-      let end =  index
+    let ind = index+1;
+    if(ind>day){
+      let star = ind-day
+      let end =  ind
       //0~9,1~10
       let nineDayData = stockData.slice(star,end)
       kdData.push(kdFn(nineDayData))
@@ -99,18 +100,19 @@ let getkdData = function(stockData){
 }
 let kdFn = async function(stockNo,method,dataSymbol){
   let stockData = await getStockData(stockNo);
-  let kdData = getkdData(stockData).at(-1)[dataSymbol];
+  let kdDatas = getkdData(stockData);
+  let kdData = kdDatas[kdDatas.length-1];
   let nowValue = ''
   if(~method.indexOf('<')){
     nowValue = method.split('<')[1]
     if(kdData<nowValue){
-      console.log(`${stockNo}，${dataSymbol}值<${nowValue}提醒，目前是:${kdData}`)
+      console.log(`${kdData['date']}，${stockNo}，${dataSymbol}值<${nowValue}提醒，目前是:${kdData[dataSymbol]}`)
     }
   }
   if(~method.indexOf('>')){
     nowValue = method.split('>')[1]
     if(kdData>nowValue){
-      console.log(`${stockNo}，${dataSymbol}值>${nowValue}提醒，目前是:${kdData}`)
+      console.log(`${kdData['date']}，${stockNo}，${dataSymbol}值>${nowValue}提醒，目前是:${kdData[dataSymbol]}`)
     }
   }
 }
