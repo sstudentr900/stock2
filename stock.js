@@ -1,10 +1,5 @@
-// const request = require("request");
-const {getGoogleSheet} = require("./googleSheet");
-// import {getGoogleSheet} from './googleSheet';//要載引入
-const { GoogleSpreadsheet } = require("google-spreadsheet");
-const creds = require('./client_secret.json');
-const doc = new GoogleSpreadsheet('1q9gzEYVoRP2Lydoa3V7mA9K8LL13vr8ButeJrEDsIvY'); // Please set your Spreadsheet ID.
-function getTimes(setMonths){
+const request = require("request");
+let getTimes = function(setMonths){
   let dt = new Date();
   let year = Number(dt.getFullYear());//111
   let month = Number(dt.getMonth())+1;//8
@@ -34,7 +29,7 @@ function getTimes(setMonths){
     return year.toString()+nowMonth.toString()+date
   }); 
 } 
-function getStockDataMonth(jsonUrl){
+let getStockDataMonth = function(jsonUrl){
   return new Promise(function (resolve, reject) {
     request({url: jsonUrl,method: "GET"}, function(error, response, body) {
       let jsons = JSON.parse(body).data;
@@ -56,12 +51,11 @@ function getStockDataMonth(jsonUrl){
     });
   })
 }
-async function getStockData(stockNo){
+let getStockData = async function(stockNo){
   let stockData = [];
   //['1110301','1110201','1110101']
-  for(let date of getTimes(3)){   
-    let jsonUrl = "https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date=" + date + "&stockNo=" + stockNo;
-    console.log(`url ${jsonUrl}`)
+  for(let today of getTimes(3)){   
+    let jsonUrl = "https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date=" + today + "&stockNo=" + stockNo;
     let array = await getStockDataMonth(jsonUrl)
     stockData = stockData.concat(array)
   }
@@ -69,7 +63,7 @@ async function getStockData(stockNo){
   stockData.sort((o1,o2)=>o1.Date-o2.Date)
   return stockData
 }
-function getkdData(stockData){
+let getkdData = function(stockData){
   let day = 9
   let K = 0
   let D = 0
@@ -104,9 +98,8 @@ function getkdData(stockData){
   });
   return kdData
 }
-async function kdFn(stockNo,method,dataSymbol){
+let kdFn = async function(stockNo,method,dataSymbol){
   let stockData = await getStockData(stockNo);
-  console.log(`get ${stockNo} stockData`)
   let kdDatas = getkdData(stockData);
   let kdData = kdDatas[kdDatas.length-1];
   let nowValue = ''
@@ -123,31 +116,32 @@ async function kdFn(stockNo,method,dataSymbol){
     }
   }
 }
-function runStock(stockNo,method) {
-  console.log(`star runStock ${stockNo}`)
-  if(~method.indexOf('k')){
+let run = function(stockNo,method) {
+  if(~method.indexOf('K')){
     kdFn(stockNo,method,'K')
   }
-  if(~method.indexOf('d')){
+  if(~method.indexOf('D')){
     kdFn(stockNo,method,'D')
   }
 };
-// async function getGoogleSheet(){
-//   await doc.useServiceAccountAuth(creds);
-//   await doc.loadInfo();
-//   const worksheet = doc.sheetsById[340899742];
-//   const rows = await worksheet.getRows();
-//   rows.forEach((row) => {
-//     const code = row._rawData[0]
-//     const method = row._rawData[1]
-//     runStock(code,method)
+
+run('2330','K>20');
+// run('2330','D>20');
+
+
+// var sheet = function() {
+//   var parameter = {
+//     sheetUrl: '試算表網址',
+//     sheetName: '工作表名稱',
+//     num: num,
+//     name: name,
+//     price: price
+//   }
+//   request({
+//     url: 'Google App Script 網址',
+//     method: "GET",
+//     qs: parameter
+//   }, function(error, response, body) {
+//     console.log(body);
 //   });
-// } 
-getGoogleSheet().then(rows=>{
-  rows.forEach((row) => {
-    // console.log(row);
-    // console.log(row.code);
-    // console.log(row.method);
-    console.log(row._rawData);
-  });
-})
+// }
