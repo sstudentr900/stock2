@@ -39,5 +39,6 @@ const linePush = (message)=>{
 }
 
 module.exports = {
-  linePush
+  linePush,
+  bot
 } 

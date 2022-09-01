@@ -1,10 +1,7 @@
 const {googleSheetGetData} = require("./googleSheet");
 const { stockStart,stockGetData } = require("./stock");
 const { linePush } = require("./lineBot");
-const lineRemind = ()=>{
-  const dt = new Date()
-  const day = dt.getDay() //星期日,星期一,星期二,星期三,星期四,星期五,星期六
-  if(day==0 || day>5 )return;//1-5
+const stock = ()=>{
   googleSheetGetData('340899742')
   .then(async(rows)=>{
     let message = []
@@ -20,5 +17,11 @@ const lineRemind = ()=>{
     linePush(message)
   })
 }
-lineRemind()
+const remind = ()=>{
+  const dt = new Date()
+  const day = dt.getDay() //星期日,星期一,星期二,星期三,星期四,星期五,星期六
+  if(day==0 || day>5 )return;//1-5
+  stock()
+}
+remind()
 // stockGetData(2330)

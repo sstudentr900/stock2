@@ -55,7 +55,7 @@ async function stockGetData(stockNo){
   for(let date of dates){   
     let jsonUrl = "https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date=" + date + "&stockNo=" + stockNo;
     let body = ''
-    // console.log('jsonUrl',jsonUrl)
+    console.log('jsonUrl',jsonUrl)
     try{
       body = await stockGetMonthData(jsonUrl)
     }catch(error){
