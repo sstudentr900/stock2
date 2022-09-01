@@ -12,6 +12,6 @@ googleSheetGetData('340899742')
   }
 
   //linePush
-  // linePush(message.join('\n'))
+  linePush(message.join('\n'))
 })
 // stockGetData(2330)
