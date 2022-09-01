@@ -1,11 +1,12 @@
 // 引用linebot SDK
+const config = require("./config");
 const linebot = require('linebot');
-const userId = 'U6bef2d9982708d27add7547e9493932c';//Your User ID
+const userId = config.lineID;//Your User ID
 // 用於辨識Line Channel的資訊
 const bot = linebot({
-  channelId: '1654921355',
-  channelSecret: '6aecda9fc9f58ddb9e452f977c80bbb1',
-  channelAccessToken: 'ICWCKiPXFGVqfPc92uF1ZJuybJakn4rhH5ih3EeA47N6RbIP0VZbMLywZQt9McHCYvh8zB/qohLtO1CTd+NT6wIlj1BIXNTP7j4cE0kRxr+v9OL7aJeSE7zhYsDm7BoHriS7NfKILJQPqkC7DSWDyQdB04t89/1O/w1cDnyilFU='
+  channelId: config.lineChannelId,
+  channelSecret: config.lineSecret,
+  channelAccessToken: config.lineAccessToken
 });
 
 // 當有人傳送訊息給Bot時
