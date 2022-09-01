@@ -4,10 +4,10 @@
 const { GoogleSpreadsheet } = require("google-spreadsheet");
 const creds = require('./client_secret.json');
 const doc = new GoogleSpreadsheet('1q9gzEYVoRP2Lydoa3V7mA9K8LL13vr8ButeJrEDsIvY'); // Please set your Spreadsheet ID.
-const getGoogleSheet = async()=>{
+const googleSheetGetData = async(id)=>{
   await doc.useServiceAccountAuth(creds);
   await doc.loadInfo();
-  const worksheet = doc.sheetsById[340899742];
+  const worksheet = doc.sheetsById[id];
   const rows = await worksheet.getRows();
   //console.log('標題',worksheet.title);
   //console.log('數量',rows.length);
@@ -26,6 +26,6 @@ const getGoogleSheet = async()=>{
   return rows
 }
 module.exports={
-  getGoogleSheet
+  googleSheetGetData
 }
 // getGoogleSheet()
