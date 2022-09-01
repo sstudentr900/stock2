@@ -7,11 +7,11 @@ function getTimes(monthLength){
   // date = date>=10?date:'0'+date
 
   //當月1號沒有資料減1個月
-  // if(date<2){
-  //   month -=1
-  // }
+  if(date<2){
+    month -=1
+  }
 
-  //日期固定取01號
+  //日期固定01日
   date = '01';
 
   let monthFn = function(month){
@@ -55,7 +55,7 @@ async function stockGetData(stockNo){
   for(let date of dates){   
     let jsonUrl = "https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date=" + date + "&stockNo=" + stockNo;
     let body = ''
-    // console.log('jsonUrl',jsonUrl)
+    console.log('jsonUrl',jsonUrl)
     try{
       body = await stockGetMonthData(jsonUrl)
     }catch(error){
@@ -64,7 +64,7 @@ async function stockGetData(stockNo){
       return `stockGetData ${stockNo} request ${date} date ${error}`
     }
     //請求成功但沒有資料
-    if(body.stat){
+    if(body.stat!='OK'){
       console.log(`stockGetData_body ${stockNo} request ${date} date ${body.stat}`)
       message = `stockGetData_body ${stockNo} request ${date} date ${body.stat}`
       return message;
