@@ -15,10 +15,10 @@ const lineRemind = ()=>{
     }
   
     //linePush
-    message.join('\n')
-    console.log(message)
-    // linePush(message.join('\n'))
+    message = message.join('\n')
+    // console.log(message)
+    linePush(message)
   })
 }
-// lineRemind()
-stockGetData(2330)
+lineRemind()
+// stockGetData(2330)
