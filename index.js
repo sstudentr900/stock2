@@ -1,27 +1,24 @@
 const {googleSheetGetData} = require("./googleSheet");
-const { stockStart,stockGetData,getTimes } = require("./stock");
-const { linePush } = require("./lineBot");
-const stock = ()=>{
-  googleSheetGetData('340899742')
-  .then(async(rows)=>{
-    let message = []
-    for(row of rows){
-      const stockNo = row._rawData[0]
-      const method = row._rawData[2]
-      message.push(await stockStart(stockNo,method))
-    }
+const { stockStart,stockGetData } = require("./stock");
+const { bot } = require("./lineBot");
+// 當有人傳送訊息給Bot時
+bot.on('message', function (event) {
+  // event.message.text是使用者傳給bot的訊息
+  // 準備要回傳的內容
+  const replyMsg = `Hello你剛才說的是:${event.message.text}`;
+  // 使用event.reply(要回傳的訊息)方法可將訊息回傳給使用者
+  event.reply(replyMsg).then(function (data) {
+  // event.reply(event.message.text).then(function (data) {
+    // 當訊息成功回傳後的處理
+    console.log('successs',data)
+  }).catch(function (error) {
+    // 當訊息回傳失敗後的處理
+    console.log('error',error)
+  });
   
-    //linePush
-    message = message.join('\n')
-    // console.log(message)
-    linePush(message)
-  })
-}
-const remind = ()=>{
-  const dt = new Date()
-  const day = dt.getDay() //星期日,星期一,星期二,星期三,星期四,星期五,星期六
-  if(day==0 || day>5 )return;//1-5
-  stock()
-}
-remind()
+});
 
+// Bot所監聽的webhook路徑與port
+bot.listen('/linewebhook',process.env.port || 80, function () {
+    console.log('BOT已準備就緒');
+});
