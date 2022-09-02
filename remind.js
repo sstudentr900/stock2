@@ -3,7 +3,8 @@ const { stockStart,stockGetData,getTimes } = require("./stock");
 const { linePush } = require("./lineBot");
 const stock = ()=>{
   googleSheetGetData('340899742')
-  .then(async(rows)=>{
+  .then(async(sheet)=>{
+    const rows = await sheet.getRows();
     let message = []
     for(row of rows){
       const stockNo = row._rawData[0]

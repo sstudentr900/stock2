@@ -1,24 +1,161 @@
 const {googleSheetGetData} = require("./googleSheet");
 const { stockStart,stockGetData } = require("./stock");
 const { bot } = require("./lineBot");
+function randomFn(length){
+  return Math.floor(Math.random()*length)
+}
+function eateSearch(event){
+  googleSheetGetData('1151243845')
+  .then(async(sheet)=>{
+    const rows = await sheet.getRows();
+    const shops = [];
+    for (row of rows) {
+      shops.push(row._rawData[0]);
+    }
+    // console.log(shops)
+    const shopName = shops[randomFn((shops.length-1))]
+    // console.log(shopName)
+
+    //reply
+    event.reply({
+      'type': 'text',
+      'text': shopName
+    })
+    
+    //要抓取位置
+    // event.reply({
+    //   "type": "location",
+    //   "title": "my location",
+    //   "address": "1-6-1 Yotsuya, Shinjuku-ku, Tokyo, 160-0004, Japan",
+    //   "latitude": 35.687574,
+    //   "longitude": 139.72922
+    // })
+  })
+}
+function eateSave(userMessage,event){
+  googleSheetGetData('1151243845')
+  .then(async(sheet)=>{
+    const array = userMessage.split(',')//[ '阿雞記吃的', '龍點心' ]
+    const rows = await sheet.getRows();
+    let word = array[1]
+    for (row of rows) {
+      if(row['shopName']==word){
+        word = false
+        break;
+      }
+    }
+    // append
+    if(word){
+      await sheet.addRow({'shopName':word});
+    }
+
+    //reply
+    // event.reply('好的，我記住了')
+  })
+}
+function wordSave(userMessage,event){
+  googleSheetGetData('1813117258')
+  .then(async(sheet)=>{
+    const array = userMessage.split(',')//[ '阿雞記關鍵字', '1', '2' ]
+    const rows = await sheet.getRows();
+    const question = array[1]
+    let answer = array[2]
+    for (let [rowIndex, row] of rows.entries()) {
+      // console.log(index, row)
+      // console.log('question',row['question']==question,row['question'],question)
+      if(row['question']==question){
+        let rawData = row._rawData.slice()
+        rawData.shift()
+        // console.log('answer==-1',rawData.indexOf(answer),rawData,answer)
+        if(rawData.indexOf(answer)==-1){
+          // console.log('n repeat')
+          // console.log('length>4',rawData.length)
+          if(rawData.length>4){
+            // console.log('more than 5')
+            answer = false
+            break;
+          }else{
+            // console.log('<5')
+            //updat
+            rows[rowIndex].question = question
+            rawData.push(answer)
+            // console.log('rowIndex',rowIndex)
+            // console.log('rawData push',rawData)
+            rawData.forEach((element,index) => {
+              // console.log('forEach',element,index)
+              rows[rowIndex]['answer'+(index+1)] = element
+            });
+
+            await rows[rowIndex].save();
+            answer = false
+            break;
+          }
+          
+        }else{
+          // console.log('y repeat')
+          answer = false
+          break;
+        }
+      }
+    }
+
+    // append
+    if(answer){
+      await sheet.addRow({'question':question,'answer1':answer});
+    }
+
+    //reply
+    // event.reply('好的，我記住了')
+  })
+}
+function wordSearch(userMessage,event){
+  for (elements of chickenSheetData) {
+    if(elements[0]==userMessage){
+      sendMessageFn([{
+        'type': 'text',
+        'text': elements[randomFn(elements.length)]
+      }],replyToken)
+      break;
+    }
+  }
+}
+
+// eateSearch()
+// eateSave('阿雞記吃的,龍點心')
+// wordSave('阿雞記關鍵字,1,3')
+wordSearch()
+
 // 當有人傳送訊息給Bot時
-bot.on('message', function (event) {
-  // event.message.text是使用者傳給bot的訊息
-  // 準備要回傳的內容
-  const replyMsg = `Hello你剛才說的是:${event.message.text}`;
-  // 使用event.reply(要回傳的訊息)方法可將訊息回傳給使用者
-  event.reply(replyMsg).then(function (data) {
-  // event.reply(event.message.text).then(function (data) {
-    // 當訊息成功回傳後的處理
-    console.log('successs',data)
-  }).catch(function (error) {
-    // 當訊息回傳失敗後的處理
-    console.log('error',error)
-  });
-  
-});
+// bot.on('message', function (event) {
+  //接收訊息訊息
+  // const userMessage = event.message.text;
+  // if(~userMessage.indexOf('阿雞記吃的')){  
+  //   eateSave(userMessage,event)
+  // }else if(~userMessage.indexOf('吃什麼')){
+  //   eateSearch(event)
+  // }else if(~userMessage.indexOf('阿雞記關鍵字')){
+  //   wordSave(userMessage)
+  // }else{
+  //   //亂數取阿雞表單資料
+  //   wordSearch(userMessage)
+  // }
+
+  //回傳方式
+  //location
+  // event.reply({
+  //   "type": "location",
+  //   "title": "my location",
+  //   "address": "1-6-1 Yotsuya, Shinjuku-ku, Tokyo, 160-0004, Japan",
+  //   "latitude": 35.687574,
+  //   "longitude": 139.72922
+  // })
+// });
+
+
 
 // Bot所監聽的webhook路徑與port
-bot.listen('/linewebhook',process.env.port || 80, function () {
-    console.log('BOT已準備就緒');
-});
+// bot.listen('/linewebhook',process.env.port || 80, function () {
+//     console.log('BOT已準備就緒');
+// });
+
+
