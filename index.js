@@ -1,5 +1,5 @@
 const {googleSheetGetData} = require("./googleSheet");
-const { stockStart,stockGetData } = require("./stock");
+const { stockStart,stockGetData,getTimes } = require("./stock");
 const { linePush } = require("./lineBot");
 const stock = ()=>{
   googleSheetGetData('340899742')
@@ -24,4 +24,4 @@ const remind = ()=>{
   stock()
 }
 remind()
-// stockGetData(2330)
+
