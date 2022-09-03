@@ -9,9 +9,9 @@ const googleSheetGetData = async(id)=>{
   await doc.useServiceAccountAuth(creds);
   await doc.loadInfo();
   //取得sheet ID
-  const worksheet = doc.sheetsById[id];
+  const sheet = doc.sheetsById[id];
   //取得所有值
-  const rows = await worksheet.getRows();
+  // const rows = await sheet.getRows();
   //console.log('標題',worksheet.title);
   //console.log('數量',rows.length);
 
@@ -26,7 +26,7 @@ const googleSheetGetData = async(id)=>{
   //   console.log(row._rawData);
   // });
 
-  return rows
+  return sheet
 }
 module.exports={
   googleSheetGetData

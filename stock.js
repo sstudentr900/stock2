@@ -7,7 +7,7 @@ function getTimes(monthLength){
   // date = date>=10?date:'0'+date
 
   //當月1號沒有資料減1個月
-  if(date<2){
+  if(date==1){
     month -=1
   }
 
