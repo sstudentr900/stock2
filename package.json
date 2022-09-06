@@ -11,10 +11,12 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@googlemaps/google-maps-services-js": "^3.3.16",
     "google-spreadsheet": "^3.3.0",
     "linebot": "^1.6.1",
     "node-geocoder": "^4.2.0",
     "nodemon": "^2.0.19",
+    "opencage-api-client": "^1.0.0",
     "request": "^2.88.2"
   }
 }

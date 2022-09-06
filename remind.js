@@ -1,6 +1,6 @@
-const {googleSheetGetData} = require("./googleSheet");
-const { stockStart,stockGetData,getTimes } = require("./stock");
-const { linePush } = require("./lineBot");
+const {googleSheetGetData} = require("./plugin/googleSheet");
+const { stockStart,stockGetData,getTimes } = require("./plugin/stock");
+const { linePush } = require("./plugin/lineBot");
 const stock = ()=>{
   googleSheetGetData('340899742')
   .then(async(sheet)=>{

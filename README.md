@@ -1,6 +1,7 @@
 # stock2 紀錄
-node request googleSheel<br>
+googleSheel<br>
 node request stock<br>
+opencage<br>
 linebot push<br>
 herko 
 

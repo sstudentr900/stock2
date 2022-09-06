@@ -1,6 +1,6 @@
-const {googleSheetGetData} = require("./googleSheet");
-const { stockStart,stockGetData } = require("./stock");
-const { bot } = require("./lineBot");
+const {googleSheetGetData} = require("./plugin/googleSheet");
+const { stockStart,stockGetData } = require("./plugin/stock");
+const { bot } = require("./plugin/lineBot");
 function randomFn(length){
   return Math.floor(Math.random()*length)
 }
