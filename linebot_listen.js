@@ -1,6 +1,6 @@
-const {googleSheetGetData} = require("./googleSheet");
-const { stockStart,stockGetData } = require("./stock");
-const { bot } = require("./lineBot");
+const {googleSheetGetData} = require("./plugin/googleSheet");
+const { stockStart,stockGetData } = require("./plugin/stock");
+const { bot } = require("./plugin/lineBot");
 // 當有人傳送訊息給Bot時
 bot.on('message', function (event) {
   // event.message.text是使用者傳給bot的訊息
