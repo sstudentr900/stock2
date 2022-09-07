@@ -121,40 +121,40 @@ function getkdData(stockData){
   });
   return kdData
 }
-async function kdFn(stockNo,method,dataSymbol){
+async function kdFn(stockNo,stockName,method,dataSymbol){
   let stockData = await stockGetData(stockNo)
   if(typeof stockData=='string')return stockData;//回傳請求錯誤
   // console.log(`kdFn get ${stockNo} data`)
   let kdDatas = getkdData(stockData)
   let kdData = kdDatas[kdDatas.length-1]
   let nowValue = ''
-  let message = `${kdData['date']}，${stockNo}，目前${dataSymbol}值是:${kdData[dataSymbol]}`
+  let message = `${kdData['date']},${stockName}(${stockNo}),目前${dataSymbol}值${kdData[dataSymbol]} `
   if(~method.indexOf('<')){
-    nowValue = method.split('<')[1]
-    if(kdData[dataSymbol]<nowValue){
-      message += `，【有符合】${dataSymbol}值<${nowValue}`
+    nowValue = Number(method.split('<')[1])
+    if(Number(kdData[dataSymbol])<nowValue){
+      message += `【有符合】${dataSymbol}值<${nowValue}`
     }else{
-      message += `，【沒有符合】${dataSymbol}值<${nowValue}`
+      message += `【沒有符合】${dataSymbol}值<${nowValue}`
     }
   }
   if(~method.indexOf('>')){
-    nowValue = method.split('>')[1]
-    if(kdData[dataSymbol]>nowValue){
-      message += `，【有符合】${dataSymbol}值>${nowValue}`
+    nowValue = Number(method.split('>')[1])
+    if(Number(kdData[dataSymbol])>nowValue){
+      message += `【有符合】${dataSymbol}值>${nowValue}`
     }else{
-      message += `，【沒有符合】${dataSymbol}值>${nowValue}`
+      message += `【沒有符合】${dataSymbol}值>${nowValue}`
     }
   }
   console.log('kdFn_message',message)
   return message;
 }
-function stockStart(stockNo,method) {
+function stockStart(stockNo,stockName,method) {
   console.log(`stockStart ${stockNo}`)
   if(~method.indexOf('k')){
-    return kdFn(stockNo,method,'K')
+    return kdFn(stockNo,stockName,method,'K')
   }
   if(~method.indexOf('d')){
-    return kdFn(stockNo,method,'D')
+    return kdFn(stockNo,stockName,method,'D')
   }
 };
 module.exports={

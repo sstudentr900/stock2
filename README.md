@@ -1,9 +1,9 @@
-# stock2 紀錄
-googleSheel<br>
+# 製作紀錄
+抓取 googleSheel 資料<br>
 node request stock<br>
-opencage<br>
+抓取 googleMap 資料<br>
 linebot push<br>
-herko 
+herko serve
 
 
 # stock api
@@ -12,8 +12,8 @@ https://openapi.twse.com.tw/#/%E8%AD%89%E5%88%B8%E4%BA%A4%E6%98%93/get_exchangeR
 https://www.npmjs.com/package/node-stock-data
 
 
-# webhook URL
-https://3a06-211-20-170-212.jp.ngrok.io<br>
+
+# line webhook URL
+https://8b5f-211-20-170-212.jp.ngrok.io<br>
 https://script.google.com/macros/s/AKfycbweYdp_Kcjiw1rPQoC6I8VpntlLG6D7R1_mG004_e-tRhTjDFfzIvUVIhDaYtfMnbTJ/exec
 
-# linebot_listen 監聽傳送訊息未做
