@@ -3,7 +3,7 @@
 node request stock<br>
 抓取 googleMap 資料<br>
 linebot push<br>
-herko serve
+heroku serve
 
 
 # stock api
