@@ -14,6 +14,5 @@ https://www.npmjs.com/package/node-stock-data
 
 
 # line webhook URL
-https://8b5f-211-20-170-212.jp.ngrok.io<br>
 https://script.google.com/macros/s/AKfycbweYdp_Kcjiw1rPQoC6I8VpntlLG6D7R1_mG004_e-tRhTjDFfzIvUVIhDaYtfMnbTJ/exec
 
