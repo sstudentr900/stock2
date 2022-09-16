@@ -3,7 +3,7 @@ const axios = require('axios');
 const linebot = require('linebot');
 const config = require("./config");
 const { googleSheetGetData } = require("./googleSheet");
-const { stockStart,stockGetData } = require("./stock");
+const { stockStart,stockGetData,stockPercentageFn } = require("./stock");
 const userId = config.lineID;//Your User ID
 // 用於辨識Line Channel的資訊
 const bot = linebot({
@@ -136,7 +136,9 @@ const wordSave = (userMessage,event)=>{
       // console.log(index, row)
       // console.log('有沒有該question',row['question']==question,row['question'],question)
       if(row['question']==question){
+        //複製array
         let rawData = row._rawData.slice()
+        //取array第一個
         rawData.shift()
         // console.log('有沒有該answer(-1)',rawData.indexOf(answer),rawData,answer)
         if(rawData.indexOf(answer)==-1){
@@ -218,21 +220,72 @@ const stockSearch = (event)=>{
     const rows = await sheet.getRows();
     let message = []
     for (let [rowIndex, row] of rows.entries()) {
-      const stockNo = row._rawData[0]
-      const stockName = row._rawData[1]
-      const method = row._rawData[2]
-      let value = row._rawData[3]
-      if(!value){
-        console.log('no value')
+      const stockNo = row['stockNo']
+      const stockName = row['stockName']
+      const method = row['method']
+      let value = row['value']
+      // //value
+      if(value){
+      //   // console.log('have value')
+        value = JSON.parse(value)
+        const valueLastDate = value[value.length-1]['Date'].split('/')[2]
+        const dt = new Date();
+        // const year = Number(dt.getFullYear());//2022
+        // const month = Number(dt.getMonth())+1;//8
+        //Number(valueLastDate[0])+1911!=year || Number(valueLastDate[1])!=month || (Number(valueLastDate[2])<date && hours>18)
+        const date = dt.getDate();//30
+        const hours = dt.getHours();//30
+        //日期小於今天取值
+        if(Number(valueLastDate)<date){
+          const datas = await stockGetData(stockNo,1)
+          if(typeof datas=='string')return message.push(datas);//回傳錯誤請求
+          value.push(datas[datas.length-1])
+        }
+        //超過600筆 只取600筆
+        if(value.length>900){
+          //刪除第一筆
+          value.splice(0,1)
+        }
+      }else{
+        // console.log('no value 就取3個月')
         value = await stockGetData(stockNo,3)
         if(typeof value=='string')return message.push(value);//回傳錯誤請求
-        //save google sheet
-        rows[rowIndex].value = JSON.stringify(value)
-        rows[rowIndex].save()
       }
-      value = JSON.parse(value)
-      console.log(value)
-      message.push(await stockStart(stockNo,stockName,method,value))
+
+      //date
+      let todayData = value[value.length-1]
+      let todayTimeArray = todayData['Date'].split('/')
+      todayTimeArray = Number(todayTimeArray[0])+1911+'/'+todayTimeArray[1]+'/'+todayTimeArray[2]
+      rows[rowIndex].date = todayTimeArray
+
+      //price
+      rows[rowIndex].price = todayData['Close']
+
+      //dayPercentage
+      rows[rowIndex].dayPercentage = stockPercentageFn(value,3)
+
+      //weekPercentage
+      rows[rowIndex].weekPercentage = stockPercentageFn(value,5)
+
+      //monthPercentage
+      rows[rowIndex].monthPercentage = stockPercentageFn(value,20)
+
+      //halfYearPercentage
+      rows[rowIndex].halfYearPercentage = stockPercentageFn(value,120)
+
+      //yearPercentage
+      rows[rowIndex].yearPercentage = stockPercentageFn(value,240)
+
+      //yearHightPrice
+
+      //yearLowPrice
+
+      //save
+      rows[rowIndex].value = JSON.stringify(value)
+      rows[rowIndex].save()
+
+      //method
+      // message.push(stockStart(stockNo,stockName,method,value))
     }
   
     //linePushFn
@@ -250,14 +303,14 @@ const stockSearch = (event)=>{
 
 stockSearch()
 
-// module.exports = {
-//   stockSearch,
-//   stockNow,
-//   eateSearch,
-//   eateSave,
-//   eateNow,
-//   wordSearch,
-//   wordSave,
-//   wordNow,
-//   bot
-// } 
+module.exports = {
+  stockSearch,
+  stockNow,
+  eateSearch,
+  eateSave,
+  eateNow,
+  wordSearch,
+  wordSave,
+  wordNow,
+  bot
+} 
