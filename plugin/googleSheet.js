@@ -10,14 +10,16 @@ const googleSheetGetData = async(id)=>{
   await doc.loadInfo();
   //取得sheet ID
   const sheet = doc.sheetsById[id];
+
   //取得所有值
-  // const rows = await sheet.getRows();
+  //const rows = await sheet.getRows();
   //console.log('標題',worksheet.title);
   //console.log('數量',rows.length);
 
   //建表
   // const sheet = await doc.addSheet({ headerValues: ['name', 'email'] })
 
+  
   //取值
   // rows.forEach((row) => {
   //   // console.log(row);
@@ -25,6 +27,20 @@ const googleSheetGetData = async(id)=>{
   //   // console.log(row.method);
   //   console.log(row._rawData);
   // });
+
+
+  //save
+  // googleSheetGetData('340899742')
+  // .then(async(sheet)=>{
+  //   const rows = await sheet.getRows();
+  //   for (let [rowIndex, row] of rows.entries()) {
+  //     if(row['nav name']=='name'){
+  //       rows[rowIndex].value = 'save value'
+  //       await rows[rowIndex].save();
+  //       break;
+  //     }
+  //   }
+  // })
 
   return sheet
 }

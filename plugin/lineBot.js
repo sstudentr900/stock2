@@ -3,7 +3,7 @@ const axios = require('axios');
 const linebot = require('linebot');
 const config = require("./config");
 const { googleSheetGetData } = require("./googleSheet");
-const { stockStart } = require("./stock");
+const { stockStart,stockGetData } = require("./stock");
 const userId = config.lineID;//Your User ID
 // 用於辨識Line Channel的資訊
 const bot = linebot({
@@ -217,36 +217,47 @@ const stockSearch = (event)=>{
   .then(async(sheet)=>{
     const rows = await sheet.getRows();
     let message = []
-    for(row of rows){
+    for (let [rowIndex, row] of rows.entries()) {
       const stockNo = row._rawData[0]
       const stockName = row._rawData[1]
       const method = row._rawData[2]
-      message.push(await stockStart(stockNo,stockName,method))
+      let value = row._rawData[3]
+      if(!value){
+        console.log('no value')
+        value = await stockGetData(stockNo,3)
+        if(typeof value=='string')return message.push(value);//回傳錯誤請求
+        //save google sheet
+        rows[rowIndex].value = JSON.stringify(value)
+        rows[rowIndex].save()
+      }
+      value = JSON.parse(value)
+      console.log(value)
+      message.push(await stockStart(stockNo,stockName,method,value))
     }
   
     //linePushFn
-    message = message.join('\n')
+    // message = message.join('\n')
     // console.log(message)
 
     //reply
-    if(event){
-      event.reply(message)
-    }else{
-      linePushFn(message)
-    }
+    // if(event){
+    //   event.reply(message)
+    // }else{
+    //   linePushFn(message)
+    // }
   })
 }
 
+stockSearch()
 
-
-module.exports = {
-  stockSearch,
-  stockNow,
-  eateSearch,
-  eateSave,
-  eateNow,
-  wordSearch,
-  wordSave,
-  wordNow,
-  bot
-} 
+// module.exports = {
+//   stockSearch,
+//   stockNow,
+//   eateSearch,
+//   eateSave,
+//   eateNow,
+//   wordSearch,
+//   wordSave,
+//   wordNow,
+//   bot
+// } 

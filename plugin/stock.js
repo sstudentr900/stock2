@@ -1,44 +1,42 @@
 const request = require("request");
+const { googleSheetGetData } = require("./googleSheet");
 function getTimes(monthLength){
   let dt = new Date();
   let year = Number(dt.getFullYear());//111
   let month = Number(dt.getMonth())+1;//8
   let date = dt.getDate();//30
   // date = date>=10?date:'0'+date
-
   //當月1號沒有資料減1個月
   if(date==1){
     month -=1
   }
+  let nowMonth = month+1
 
   //日期固定01日
   date = '01';
 
   let monthFn = function(month){
-    return month>=10?month:'0'+month
+    //2=>02
+    return (month>=10?month:'0'+month).toString()
   }
   return Array.from({
     length: monthLength
   }, (val, index) => {
-    let nowMonth = month-index
+    nowMonth -= 1
     //year 111,110
+    //month 12,11,10 
     if(nowMonth==0){
       year -= 1
+      nowMonth = 12
     }
-    //nowMonth 2,1,12,11,10
-    if(nowMonth<=0){
-      nowMonth += 12
-    }
-    //2=>02
-    nowMonth = monthFn(nowMonth)
 
     //'1110301'
-    return year.toString()+nowMonth.toString()+date
+    return year.toString()+monthFn(nowMonth)+date
   }); 
 } 
-function stockGetMonthData(jsonUrl){
-  return new Promise(function (resolve, reject) {
-    request({url: jsonUrl,method: "GET"}, function(error, response, body) {
+function stockGetMonthData(obj){
+  return new Promise( (resolve, reject) => {
+    request(obj, function(error, response, body) {
       if (error) {
         reject(error);
       } else {
@@ -47,17 +45,16 @@ function stockGetMonthData(jsonUrl){
     });
   })
 }
-async function stockGetData(stockNo){
+async function stockGetData(stockNo,monthLength=3){
   let stockData = []
-  let length = 3
   //['20220701','20220801','20220901']
-  let dates = getTimes(length)
+  let dates = getTimes(monthLength)
   for(let date of dates){   
     let jsonUrl = "https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date=" + date + "&stockNo=" + stockNo;
     let body = ''
     console.log('jsonUrl',jsonUrl)
     try{
-      body = await stockGetMonthData(jsonUrl)
+      body = await stockGetMonthData({url: jsonUrl,method: "GET"})
     }catch(error){
       //請求錯誤訊息
       console.log(`stockGetData ${stockNo} request ${date} date ${error}`)
@@ -84,6 +81,7 @@ async function stockGetData(stockNo){
   }
   //時間排序小到大
   stockData.sort((o1,o2)=>o1.Date-o2.Date)
+  // console.log(stockData)
   return stockData;
 }
 function getkdData(stockData){
@@ -121,9 +119,7 @@ function getkdData(stockData){
   });
   return kdData
 }
-async function kdFn(stockNo,stockName,method,dataSymbol){
-  let stockData = await stockGetData(stockNo)
-  if(typeof stockData=='string')return stockData;//回傳請求錯誤
+async function kdFn(stockData,stockNo,stockName,method,dataSymbol){
   // console.log(`kdFn get ${stockNo} data`)
   let kdDatas = getkdData(stockData)
   let kdData = kdDatas[kdDatas.length-1]
@@ -148,16 +144,19 @@ async function kdFn(stockNo,stockName,method,dataSymbol){
   console.log('kdFn_message',message)
   return message;
 }
-function stockStart(stockNo,stockName,method) {
+async function stockStart(stockNo,stockName,method,stockData) {
+  //kd
   console.log(`stockStart ${stockNo}`)
   if(~method.indexOf('k')){
-    return kdFn(stockNo,stockName,method,'K')
+    return kdFn(stockData,stockNo,stockName,method,'K')
   }
   if(~method.indexOf('d')){
-    return kdFn(stockNo,stockName,method,'D')
+    return kdFn(stockData,stockNo,stockName,method,'D')
   }
 };
 module.exports={
   stockStart,
   stockGetData
 }
+
+// stockStart();
