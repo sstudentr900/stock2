@@ -3,7 +3,7 @@ const axios = require('axios');
 const linebot = require('linebot');
 const config = require("./config");
 const { googleSheetGetData } = require("./googleSheet");
-const { stockStart,stockGetData,stockPercentageFn } = require("./stock");
+const { stockStart,stockGetData,stockPercentage,stockYearPrice,stockExdividend } = require("./stock");
 const userId = config.lineID;//Your User ID
 // 用於辨識Line Channel的資訊
 const bot = linebot({
@@ -224,7 +224,8 @@ const stockSearch = (event)=>{
       const stockName = row['stockName']
       const method = row['method']
       let value = row['value']
-      // //value
+
+      //get value
       if(value){
       //   // console.log('have value')
         value = JSON.parse(value)
@@ -232,11 +233,12 @@ const stockSearch = (event)=>{
         const dt = new Date();
         // const year = Number(dt.getFullYear());//2022
         // const month = Number(dt.getMonth())+1;//8
+        // const hours = dt.getHours();//30
         //Number(valueLastDate[0])+1911!=year || Number(valueLastDate[1])!=month || (Number(valueLastDate[2])<date && hours>18)
         const date = dt.getDate();//30
-        const hours = dt.getHours();//30
         //日期小於今天取值
-        if(Number(valueLastDate)<date){
+        if(Number(valueLastDate)!=date && Number(valueLastDate)<date){
+          console.log('日期小於今天取值')
           const datas = await stockGetData(stockNo,1)
           if(typeof datas=='string')return message.push(datas);//回傳錯誤請求
           value.push(datas[datas.length-1])
@@ -247,45 +249,46 @@ const stockSearch = (event)=>{
           value.splice(0,1)
         }
       }else{
-        // console.log('no value 就取3個月')
+        console.log('no value 就取3個月')
         value = await stockGetData(stockNo,3)
         if(typeof value=='string')return message.push(value);//回傳錯誤請求
       }
 
-      //date
-      let todayData = value[value.length-1]
-      let todayTimeArray = todayData['Date'].split('/')
-      todayTimeArray = Number(todayTimeArray[0])+1911+'/'+todayTimeArray[1]+'/'+todayTimeArray[2]
-      rows[rowIndex].date = todayTimeArray
+      //date,price
+      // const todayData = value[value.length-1]
+      // let todayTimeArray = todayData['Date'].split('/')
+      // todayTimeArray = Number(todayTimeArray[0])+1911+'/'+todayTimeArray[1]+'/'+todayTimeArray[2]
+      // rows[rowIndex].date = todayTimeArray
+      // rows[rowIndex].price = todayData['Close']
 
-      //price
-      rows[rowIndex].price = todayData['Close']
+      //dayPercentage,weekPercentage,monthPercentage,halfYearPercentage,yearPercentage
+      //rows[rowIndex].dayPercentage = stockPercentage(value,3)
+      //rows[rowIndex].weekPercentage = stockPercentage(value,5)
+      //rows[rowIndex].monthPercentage = stockPercentage(value,20)
+      //rows[rowIndex].halfYearPercentage = stockPercentage(value,120)
+      //rows[rowIndex].yearPercentage = stockPercentage(value,240)
 
-      //dayPercentage
-      rows[rowIndex].dayPercentage = stockPercentageFn(value,3)
+      //yearHightPrice,yearLowPrice
+      // const yearPrice = stockYearPrice(value)
+      // rows[rowIndex].yearHightPrice = yearPrice['max']
+      // rows[rowIndex].yearLowPrice = yearPrice['min']
 
-      //weekPercentage
-      rows[rowIndex].weekPercentage = stockPercentageFn(value,5)
+      //exdividend 除息
+      const exdividendDay = await stockExdividend(stockNo)
+      if(exdividendDay.length){
+        rows[rowIndex].exdividendDay = `${exdividendDay[0]['Date']}(${Number(exdividendDay[0]['CashDividend']).toFixed(2)})` 
+      }
+    
 
-      //monthPercentage
-      rows[rowIndex].monthPercentage = stockPercentageFn(value,20)
-
-      //halfYearPercentage
-      rows[rowIndex].halfYearPercentage = stockPercentageFn(value,120)
-
-      //yearPercentage
-      rows[rowIndex].yearPercentage = stockPercentageFn(value,240)
-
-      //yearHightPrice
-
-      //yearLowPrice
-
+      
       //save
-      rows[rowIndex].value = JSON.stringify(value)
+      //rows[rowIndex].value = JSON.stringify(value)
       rows[rowIndex].save()
 
       //method
-      // message.push(stockStart(stockNo,stockName,method,value))
+      // if(method){
+      //   message.push(stockStart(stockNo,stockName,method,value))
+      // }
     }
   
     //linePushFn

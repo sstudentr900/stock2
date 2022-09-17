@@ -25,15 +25,17 @@ function getTimes(monthLength){
     return year.toString()+monthFn(month)+date
   }); 
 } 
-function stockGetMonthData(obj){
+function stockPromise(obj){
   return new Promise( (resolve, reject) => {
-    request(obj, function(error, response, body) {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(JSON.parse(body))
-      }
-    });
+    setTimeout(()=>{
+      request(obj, function(error, response, body) {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(JSON.parse(body))
+        }
+      });
+    },0)
   })
 }
 async function stockGetData(stockNo,monthLength=3){
@@ -45,7 +47,7 @@ async function stockGetData(stockNo,monthLength=3){
     let body = ''
     console.log('jsonUrl',jsonUrl)
     try{
-      body = await stockGetMonthData({url: jsonUrl,method: "GET"})
+      body = await stockPromise({url: jsonUrl,method: "GET"})
     }catch(error){
       //請求錯誤訊息
       console.log(`stockGetData ${stockNo} request ${date} date ${error}`)
@@ -76,7 +78,12 @@ async function stockGetData(stockNo,monthLength=3){
   // console.log(stockData)
   return stockData;
 }
-function stockPercentageFn(stockData,time){
+async function stockExdividend(stockNo){
+  let jsonUrl = 'https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL'
+  return await stockPromise({url: jsonUrl,method: "GET"})
+  .then(datas=>datas.filter(data=>data.Code==stockNo))
+}
+function stockPercentage(stockData,time){
   const end = stockData[stockData.length-1]['Close']
   const start = stockData[stockData.length-(1+time)]?.Close
   //https://bobbyhadz.com/blog/javascript-cannot-read-property-of-undefined
@@ -85,6 +92,11 @@ function stockPercentageFn(stockData,time){
   }else{
     return '0%'
   }
+}
+function stockYearPrice(stockData){
+  let maxClose = stockData.reduce((a,b)=>a.Close>=b.Close?a:b)['Close']
+  let minClose = stockData.reduce((a,b)=>a.Close<=b.Close?a:b)['Close']
+  return {'max':maxClose,'min':minClose} 
 }
 function stockGetkdData(stockData){
   let day = 9
@@ -159,7 +171,9 @@ function stockStart(stockNo,stockName,method,stockData) {
 module.exports={
   stockStart,
   stockGetData,
-  stockPercentageFn
+  stockPercentage,
+  stockYearPrice,
+  stockExdividend
 }
 
 // stockStart();
