@@ -39,6 +39,9 @@ https://www.twse.com.tw/zh/page/trading/exchange/BWIBBU_d.html
 https://www.twse.com.tw/zh/page/trading/exchange/BWIBBU.html
 
 
+# 7%選股
+5年平均股利,7%殖利率買,小於5%開始賣,3%光光
+
 
 
 
