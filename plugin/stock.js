@@ -1,8 +1,9 @@
-const request = require("request");
+const request = require("request");//抓取整個網頁的程式碼
 const { googleSheetGetData } = require("./googleSheet");
+const cheerio = require("cheerio");//後端的 jQuery
 function getTimes(monthLength){
   const dt = new Date();
-  let year = Number(dt.getFullYear());//111
+  let year = Number(dt.getFullYear());//2022
   let month = Number(dt.getMonth())+2;//+2是因為第一次減1
   const date = '01';//日期固定01日
   const monthFn = function(month){
@@ -110,22 +111,57 @@ async function stockNetWorth(stockNo){
 }
 async function stockYield(stockNo){
   //殖利率
-  console.log('stockYield')
+  console.log('stockYield',stockNo,'-------')
+  const yearArray = []; // 建立一個儲存結果的容器
   const jsonUrl = 'https://www.twse.com.tw/zh/ETF/etfDiv'
-  return await stockPromise({url: jsonUrl,method: "POST",form:{stkNo: "0050",startYear: "2017",endYear: "2020"}})
-  .then(body=>body)
-  .then(datas=>{
-    console.log(datas)
-    // datas.forEach(datas=>{
-      // if(data.stockNo==stockNo){
-      //   console.log('殖利率',stockNo)
-      //   // data.dividends
-      //   const dt = new Date();
-      //   let year = Number(dt.getFullYear());//111
-      //   console.log(year)
-      // }
-    // })
-  })
+  const dt = new Date();
+  let year = Number(dt.getFullYear());//2022
+  for(let j=0;j<5;j++){
+    year -=1
+    await stockPromise({url: jsonUrl,method: "POST",form:{stkNo: stockNo,startYear: year,endYear: year}})
+    .then(body=>{
+      const $ = cheerio.load(body);
+      const grid_trs = $(".grid tr");
+      let exdividends = [];
+      let yearExdividend = 0;
+      let yearDate = 0;
+      if(!grid_trs.eq(1).find('td').eq(2).text()){
+        return;
+      }
+      for (let i = 1; i < grid_trs.length; i++) { // 走訪 tr
+        const table_td = grid_trs.eq(i).find('td'); // 擷取每個欄位(td)
+        // const time = table_td.eq(0).text(); // 代號
+        // const latitude = table_td.eq(1).text(); // 證券簡稱	
+        const dividendDay = table_td.eq(2).text(); // 除息交易日	
+        // const amgnitude = table_td.eq(3).text(); // 收益分配基準日	
+        // const depth = table_td.eq(4).text(); // 收益分配發放日	
+        const exdividend = table_td.eq(5).text(); // 收益分配金額 (每1受益權益單位)	
+        // const location = table_td.eq(6).text(); // 收益分配標準 (102年度起啟用)	
+        // const year = table_td.eq(7).text(); // 公告年度
+        // 建立物件並(push)存入結果
+        // yearArray.push(Object.assign({ dividendDay, exdividend, year }));
+        // console.log(table_td.eq(5).text())
+        exdividends.push(Object.assign({ dividendDay,exdividend }));
+        yearExdividend += Number(exdividend);
+        yearDate = Number(table_td.eq(7).text())+1911;
+      }
+      yearExdividend = Number(yearExdividend.toFixed(2))
+      yearArray.push(Object.assign({ stockNo,yearDate,yearExdividend,exdividends }));
+    })
+  }
+  return;
+  // .then(datas=>{
+  //   console.log(datas)
+  //   // datas.forEach(datas=>{
+  //     // if(data.stockNo==stockNo){
+  //     //   console.log('殖利率',stockNo)
+  //     //   // data.dividends
+  //     //   const dt = new Date();
+  //     //   let year = Number(dt.getFullYear());//111
+  //     //   console.log(year)
+  //     // }
+  //   // })
+  // })
 }
 function stockPercentage(stockData,time){
   const end = stockData[stockData.length-1]['Close']
