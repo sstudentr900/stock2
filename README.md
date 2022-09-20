@@ -22,11 +22,20 @@ https://aronhack.com/zh/retrieve-stock-historical-data-with-python-and-yahoo-fin
 http://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date=20160501&stockNo=2330
 
 
-# 除息 api
-https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL
-
 # etf 淨值
 https://mis.twse.com.tw/stock/etf_nav.jsp?ex=tse#anchor1
+https://mis.twse.com.tw/stock/data/all_etf.txt?1663653801433
+ 
 
+ # 除息 api
+https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL
+https://www.twse.com.tw/zh/ETF/etfDiv
+https://www.wantgoo.com/stock/etf/dividend-data?v=1
+# etf 殖利率
+https://tw.stock.yahoo.com/_td-stock/api/resource/StockServices.etfRanking;limit=100;offset=0;rankId=dividend?bkt=&device=desktop&ecma=modern&feature=ecmaModern%2CuseNewQuoteTabColor&intl=tw&lang=zh-Hant-TW&partner=none&prid=1g1o49lhiise4&region=TW&site=finance&tz=Asia%2FTaipei&ver=1.2.1466&returnMeta=true
+# 上市殖利率
+https://www.twse.com.tw/zh/page/trading/exchange/BWIBBU_d.html
+# 上市日期殖利率
+https://www.twse.com.tw/zh/page/trading/exchange/BWIBBU.html
 
 
