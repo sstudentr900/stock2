@@ -3,7 +3,7 @@ const axios = require('axios');
 const linebot = require('linebot');
 const config = require("./config");
 const { googleSheetGetData } = require("./googleSheet");
-const { stockStart,stockGetData,stockPercentage,stockYearPrice,stockExdividend } = require("./stock");
+const { stockStart,stockGetData,stockPercentage,stockYearPrice,stockNetWorth,stockExdividend,stockYield } = require("./stock");
 const userId = config.lineID;//Your User ID
 // 用於辨識Line Channel的資訊
 const bot = linebot({
@@ -226,33 +226,33 @@ const stockSearch = (event)=>{
       let value = row['value']
 
       //get value
-      if(value){
+      // if(value){
       //   // console.log('have value')
-        value = JSON.parse(value)
-        const valueLastDate = value[value.length-1]['Date'].split('/')[2]
-        const dt = new Date();
-        // const year = Number(dt.getFullYear());//2022
-        // const month = Number(dt.getMonth())+1;//8
-        // const hours = dt.getHours();//30
-        //Number(valueLastDate[0])+1911!=year || Number(valueLastDate[1])!=month || (Number(valueLastDate[2])<date && hours>18)
-        const date = dt.getDate();//30
-        //日期小於今天取值
-        if(Number(valueLastDate)!=date && Number(valueLastDate)<date){
-          console.log('日期小於今天取值')
-          const datas = await stockGetData(stockNo,1)
-          if(typeof datas=='string')return message.push(datas);//回傳錯誤請求
-          value.push(datas[datas.length-1])
-        }
-        //超過600筆 只取600筆
-        if(value.length>900){
-          //刪除第一筆
-          value.splice(0,1)
-        }
-      }else{
-        console.log('no value 就取3個月')
-        value = await stockGetData(stockNo,3)
-        if(typeof value=='string')return message.push(value);//回傳錯誤請求
-      }
+      //   value = JSON.parse(value)
+      //   const valueLastDate = value[value.length-1]['Date'].split('/')[2]
+      //   const dt = new Date();
+      //   // const year = Number(dt.getFullYear());//2022
+      //   // const month = Number(dt.getMonth())+1;//8
+      //   // const hours = dt.getHours();//30
+      //   //Number(valueLastDate[0])+1911!=year || Number(valueLastDate[1])!=month || (Number(valueLastDate[2])<date && hours>18)
+      //   const date = dt.getDate();//30
+      //   //日期小於今天取值
+      //   if(Number(valueLastDate)!=date && Number(valueLastDate)<date){
+      //     console.log('日期小於今天取值')
+      //     const datas = await stockGetData(stockNo,1)
+      //     if(typeof datas=='string')return message.push(datas);//回傳錯誤請求
+      //     value.push(datas[datas.length-1])
+      //   }
+      //   //超過600筆 只取600筆
+      //   if(value.length>900){
+      //     //刪除第一筆
+      //     value.splice(0,1)
+      //   }
+      // }else{
+      //   console.log('no value 就取3個月')
+      //   value = await stockGetData(stockNo,3)
+      //   if(typeof value=='string')return message.push(value);//回傳錯誤請求
+      // }
 
       //date,price
       // const todayData = value[value.length-1]
@@ -274,12 +274,25 @@ const stockSearch = (event)=>{
       // rows[rowIndex].yearLowPrice = yearPrice['min']
 
       //exdividend 除息
-      const exdividendDay = await stockExdividend(stockNo)
-      if(exdividendDay.length){
-        rows[rowIndex].exdividendDay = `${exdividendDay[0]['Date']}(${Number(exdividendDay[0]['CashDividend']).toFixed(2)})` 
-      }
+      // const exdividendDay = await stockExdividend(stockNo)
+      // if(exdividendDay.length){
+      //   rows[rowIndex].exdividendDay = `${exdividendDay[0]['Date']}/${Number(exdividendDay[0]['CashDividend']).toFixed(2)}` 
+      // }
     
 
+      //netWorth 淨值
+      // const netWorth = await stockNetWorth(stockNo)
+      // if(netWorth){
+      //   // console.log('netWorth淨值',netWorth)
+      //   rows[rowIndex].netWorth = `${netWorth.f}/${netWorth.g}%` 
+      // }
+
+      //yield 殖利率
+      const yield = await stockYield(stockNo)
+      // console.log('yield',yield)
+      // if(yield){
+      //   rows[rowIndex].yield = `${yield}/${yield}%` 
+      // }
       
       //save
       //rows[rowIndex].value = JSON.stringify(value)

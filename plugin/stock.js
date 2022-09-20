@@ -28,11 +28,11 @@ function getTimes(monthLength){
 function stockPromise(obj){
   return new Promise( (resolve, reject) => {
     setTimeout(()=>{
-      request(obj, function(error, response, body) {
+      request(obj,(error, response, body)=>{
         if (error) {
           reject(error);
         } else {
-          resolve(JSON.parse(body))
+          resolve(body)
         }
       });
     },0)
@@ -48,6 +48,7 @@ async function stockGetData(stockNo,monthLength=3){
     console.log('jsonUrl',jsonUrl)
     try{
       body = await stockPromise({url: jsonUrl,method: "GET"})
+      body = JSON.parse(body)
     }catch(error){
       //請求錯誤訊息
       console.log(`stockGetData ${stockNo} request ${date} date ${error}`)
@@ -79,9 +80,52 @@ async function stockGetData(stockNo,monthLength=3){
   return stockData;
 }
 async function stockExdividend(stockNo){
-  let jsonUrl = 'https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL'
+  //除息
+  const jsonUrl = 'https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL'
   return await stockPromise({url: jsonUrl,method: "GET"})
+  .then(body=>JSON.parse(body))
   .then(datas=>datas.filter(data=>data.Code==stockNo))
+}
+async function stockNetWorth(stockNo){
+  //淨值
+  const jsonUrl = 'https://mis.twse.com.tw/stock/data/all_etf.txt?1663653801433'
+  return await stockPromise({url: jsonUrl,method: "GET"})
+  .then(body=>JSON.parse(body))
+  .then(data=>data.a1)
+  .then(a1s=>{
+    let result = false;
+    for(a1 of a1s){
+      const msgs = a1.msgArray
+      if(msgs){
+        for(msg of msgs){
+          // console.log(msg.a,stockNo)
+          if(msg.a==stockNo){
+            result = msg
+          }
+        }
+      }
+    }
+    return result;
+  })
+}
+async function stockYield(stockNo){
+  //殖利率
+  console.log('stockYield')
+  const jsonUrl = 'https://www.twse.com.tw/zh/ETF/etfDiv'
+  return await stockPromise({url: jsonUrl,method: "POST",form:{stkNo: "0050",startYear: "2017",endYear: "2020"}})
+  .then(body=>body)
+  .then(datas=>{
+    console.log(datas)
+    // datas.forEach(datas=>{
+      // if(data.stockNo==stockNo){
+      //   console.log('殖利率',stockNo)
+      //   // data.dividends
+      //   const dt = new Date();
+      //   let year = Number(dt.getFullYear());//111
+      //   console.log(year)
+      // }
+    // })
+  })
 }
 function stockPercentage(stockData,time){
   const end = stockData[stockData.length-1]['Close']
@@ -173,7 +217,9 @@ module.exports={
   stockGetData,
   stockPercentage,
   stockYearPrice,
-  stockExdividend
+  stockNetWorth,
+  stockExdividend,
+  stockYield
 }
 
 // stockStart();
