@@ -224,35 +224,37 @@ const stockSearch = (event)=>{
       const stockName = row['stockName']
       const method = row['method']
       let value = row['value']
+      let yieldValue = row['yieldValue']
+      if(!stockNo)return;
 
       //get value
-      // if(value){
-      //   // console.log('have value')
-      //   value = JSON.parse(value)
-      //   const valueLastDate = value[value.length-1]['Date'].split('/')[2]
-      //   const dt = new Date();
-      //   // const year = Number(dt.getFullYear());//2022
-      //   // const month = Number(dt.getMonth())+1;//8
-      //   // const hours = dt.getHours();//30
-      //   //Number(valueLastDate[0])+1911!=year || Number(valueLastDate[1])!=month || (Number(valueLastDate[2])<date && hours>18)
-      //   const date = dt.getDate();//30
-      //   //日期小於今天取值
-      //   if(Number(valueLastDate)!=date && Number(valueLastDate)<date){
-      //     console.log('日期小於今天取值')
-      //     const datas = await stockGetData(stockNo,1)
-      //     if(typeof datas=='string')return message.push(datas);//回傳錯誤請求
-      //     value.push(datas[datas.length-1])
-      //   }
-      //   //超過600筆 只取600筆
-      //   if(value.length>900){
-      //     //刪除第一筆
-      //     value.splice(0,1)
-      //   }
-      // }else{
-      //   console.log('no value 就取3個月')
-      //   value = await stockGetData(stockNo,3)
-      //   if(typeof value=='string')return message.push(value);//回傳錯誤請求
-      // }
+      if(value){
+        // console.log('have value')
+        value = JSON.parse(value)
+        const valueLastDate = value[value.length-1]['Date'].split('/')[2]
+        const dt = new Date();
+        // const year = Number(dt.getFullYear());//2022
+        // const month = Number(dt.getMonth())+1;//8
+        // const hours = dt.getHours();//30
+        //Number(valueLastDate[0])+1911!=year || Number(valueLastDate[1])!=month || (Number(valueLastDate[2])<date && hours>18)
+        const date = dt.getDate();//30
+        //日期小於今天取值
+        if(Number(valueLastDate)!=date && Number(valueLastDate)<date){
+          console.log('日期小於今天取值')
+          const datas = await stockGetData(stockNo,1)
+          if(typeof datas=='string')return message.push(datas);//回傳錯誤請求
+          value.push(datas[datas.length-1])
+        }
+        //超過600筆 只取600筆
+        if(value.length>900){
+          //刪除第一筆
+          value.splice(0,1)
+        }
+      }else{
+        console.log('no value 就取6個月')
+        value = await stockGetData(stockNo,6)
+        if(typeof value=='string')return message.push(value);//回傳錯誤請求
+      }
 
       //date,price
       // const todayData = value[value.length-1]
@@ -261,41 +263,51 @@ const stockSearch = (event)=>{
       // rows[rowIndex].date = todayTimeArray
       // rows[rowIndex].price = todayData['Close']
 
-      //dayPercentage,weekPercentage,monthPercentage,halfYearPercentage,yearPercentage
-      //rows[rowIndex].dayPercentage = stockPercentage(value,3)
-      //rows[rowIndex].weekPercentage = stockPercentage(value,5)
-      //rows[rowIndex].monthPercentage = stockPercentage(value,20)
-      //rows[rowIndex].halfYearPercentage = stockPercentage(value,120)
-      //rows[rowIndex].yearPercentage = stockPercentage(value,240)
+       //netWorth 淨值
+      // const netWorth = await stockNetWorth(stockNo)
+      // if(netWorth){
+      //   // console.log('netWorth淨值',netWorth)
+      //   rows[rowIndex].netWorth = `${netWorth.f} / ${netWorth.g}%` 
+      // }
 
-      //yearHightPrice,yearLowPrice
+      //dayPercentage,weekPercentage,monthPercentage,halfYearPercentage,yearPercentage
+      // rows[rowIndex].dayPercentage = stockPercentage(value,3)
+      // rows[rowIndex].weekPercentage = stockPercentage(value,5)
+      // rows[rowIndex].monthPercentage = stockPercentage(value,20)
+      // rows[rowIndex].halfYearPercentage = stockPercentage(value,120)
+      // rows[rowIndex].yearPercentage = stockPercentage(value,240)
+
+      //yearHightPrice,yearLowPrice 
       // const yearPrice = stockYearPrice(value)
       // rows[rowIndex].yearHightPrice = yearPrice['max']
       // rows[rowIndex].yearLowPrice = yearPrice['min']
+      // rows[rowIndex].yearDifference = yearPrice['diffind']
 
       //exdividend 除息
       // const exdividendDay = await stockExdividend(stockNo)
       // if(exdividendDay.length){
-      //   rows[rowIndex].exdividendDay = `${exdividendDay[0]['Date']}/${Number(exdividendDay[0]['CashDividend']).toFixed(2)}` 
-      // }
-    
-
-      //netWorth 淨值
-      // const netWorth = await stockNetWorth(stockNo)
-      // if(netWorth){
-      //   // console.log('netWorth淨值',netWorth)
-      //   rows[rowIndex].netWorth = `${netWorth.f}/${netWorth.g}%` 
+      //   rows[rowIndex].exdividendDay = `${exdividendDay[0]['Date']} / ${Number(exdividendDay[0]['CashDividend']).toFixed(2)}` 
       // }
 
       //yield 殖利率
-      const yield = await stockYield(stockNo)
-      // console.log('yield',yield)
-      // if(yield){
-      //   rows[rowIndex].yield = `${yield}/${yield}%` 
-      // }
+      const yield = await stockYield(stockNo,value,yieldValue)
+      if(yield){
+        console.log('monthYield',yield['monthYield'])
+        console.log('threeMonthYield',yield['threeMonthYield'])
+        rows[rowIndex].exdividendAverage = yield['exdividendAverage']
+        rows[rowIndex].exdividendBefore = yield['exdividendBefore']
+        rows[rowIndex].exdividendBefore1 = yield['exdividendBefore1']
+        rows[rowIndex].exdividendBefore2 = yield['exdividendBefore2']
+        rows[rowIndex].nowYield = yield['nowYield']
+        rows[rowIndex].monthYield = yield['monthYield']
+        rows[rowIndex].threeMonthYield = yield['threeMonthYield']
+        rows[rowIndex].halfYearYield = yield['halfYearYield']
+        rows[rowIndex].yearYield = yield['yearYield']
+        rows[rowIndex].yieldValue = JSON.stringify(yield['yearArray'])
+      }
       
       //save
-      //rows[rowIndex].value = JSON.stringify(value)
+      rows[rowIndex].value = JSON.stringify(value)
       rows[rowIndex].save()
 
       //method
