@@ -215,7 +215,7 @@ const stockNow = (event)=>{
   })
 }
 const stockSearch = (event)=>{
-  googleSheetGetData('340899742')
+  googleSheetGetData('760880998')
   .then(async(sheet)=>{
     const rows = await sheet.getRows();
     let message = []
@@ -223,8 +223,8 @@ const stockSearch = (event)=>{
       const stockNo = row['stockNo']
       const stockName = row['stockName']
       const method = row['method']
-      let value = row['value']
-      let yieldValue = row['yieldValue']
+      // let value = row['value']
+      // let yieldValue = row['yieldValue']
       if(!stockNo)return;
 
       //get value

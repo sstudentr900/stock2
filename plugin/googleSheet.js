@@ -29,7 +29,7 @@ const googleSheetGetData = async(id)=>{
   // });
 
 
-  //save
+  //update
   // googleSheetGetData('340899742')
   // .then(async(sheet)=>{
   //   const rows = await sheet.getRows();
@@ -40,6 +40,13 @@ const googleSheetGetData = async(id)=>{
   //       break;
   //     }
   //   }
+  // })
+
+  
+  //save
+  // googleSheetGetData('340899742')
+  // .then(async(sheet)=>{
+  //   await sheet.addRow({'name':value});
   // })
 
   return sheet

@@ -5,6 +5,8 @@ node request stock<br>
 linebot push<br>
 heroku serve
 
+# google-spreadsheet
+https://theoephraim.github.io/node-google-spreadsheet/#/
 
 # line webhook URL
 https://nodelinebotstock.herokuapp.com/linewebhook
@@ -32,7 +34,7 @@ https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL
 https://www.twse.com.tw/zh/ETF/etfDiv
 # etf 殖利率
 https://tw.stock.yahoo.com/_td-stock/api/resource/StockServices.etfRanking;limit=100;offset=0;rankId=dividend?bkt=&device=desktop&ecma=modern&feature=ecmaModern%2CuseNewQuoteTabColor&intl=tw&lang=zh-Hant-TW&partner=none&prid=1g1o49lhiise4&region=TW&site=finance&tz=Asia%2FTaipei&ver=1.2.1466&returnMeta=true
-# 上市殖利率
+# 上市全部殖利率
 https://www.twse.com.tw/zh/page/trading/exchange/BWIBBU_d.html
 # 上市日期殖利率
 https://www.twse.com.tw/zh/page/trading/exchange/BWIBBU.html

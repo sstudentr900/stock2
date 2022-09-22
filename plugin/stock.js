@@ -281,7 +281,8 @@ module.exports={
   stockYearPrice,
   stockNetWorth,
   stockExdividend,
-  stockYield
+  stockYield,
+  stockPromise
 }
 
 // stockStart();
