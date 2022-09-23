@@ -11,6 +11,11 @@ https://theoephraim.github.io/node-google-spreadsheet/#/
 # line webhook URL
 https://nodelinebotstock.herokuapp.com/linewebhook
 
+# yahoo-finance
+https://www.npmjs.com/package/yahoo-finance
+
+# yahoo-stock-prices
+https://www.npmjs.com/package/yahoo-stock-prices
 
 # stock api
 https://clu.gitbook.io/python-web-crawler-note/45-tai-wan-zheng-quan-jiao-yi-suo<br>

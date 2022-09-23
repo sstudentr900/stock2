@@ -84,10 +84,10 @@ async function stockExdividend(stockNo){
   //除息
   const jsonUrl = 'https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL'
   const result = 0
-  let exdividend  = await stockPromise({url: jsonUrl,method: "GET"})
+  let exdividend = await stockPromise({url: jsonUrl,method: "GET"})
   .then(body=>JSON.parse(body))
   .then(datas=>datas.filter(data=>data.Code==stockNo))
-  if(exdividend){
+  if(exdividend.length){
     result = `${exdividend[0]['Date']} / ${Number(exdividend[0]['CashDividend']).toFixed(2)}`
   }
   return result
@@ -160,9 +160,10 @@ async function stockYield(stockNo,value,yieldValue){
       })
     }
   }else{
-    yearArray = yieldValue
+    yearArray = JSON.parse(yieldValue)
   }
 
+  console.log(yearArray)
   //(5年)平均股利
   const yearTotle = yearArray.reduce((previous,current)=>previous+current.yearExdividend,0)
   const yearLength = yearArray.length
