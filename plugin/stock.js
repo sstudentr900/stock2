@@ -1,6 +1,7 @@
 const request = require("request");//抓取整個網頁的程式碼
 const { googleSheetGetData } = require("./googleSheet");
 const cheerio = require("cheerio");//後端的 jQuery
+const yahooFinance = require('yahoo-finance');
 function getTimes(monthLength){
   const dt = new Date();
   let year = Number(dt.getFullYear());//2022
@@ -39,7 +40,7 @@ function stockPromise(obj){
     },0)
   })
 }
-async function stockGetData(stockNo,monthLength=3){
+async function stockGetDataX(stockNo,monthLength=3){
   let stockData = []
   //['20220701','20220801','20220901']
   let dates = getTimes(monthLength)
@@ -75,10 +76,41 @@ async function stockGetData(stockNo,monthLength=3){
     })
     stockData = stockData.concat(array)
   }
-  //時間排序小到大
   stockData.sort((o1,o2)=>o1.Date.split('/').join('')-o2.Date.split('/').join(''))
-  // console.log(stockData)
-  return stockData;
+  return stockData
+}
+async function stockGetData(stockNo,from,to){
+  return await yahooFinance.historical({
+    symbol: `${stockNo}.TW`,
+    from: from,
+    to: to,
+    // period: 'd'  // 'd' (daily), 'w' (weekly), 'm' (monthly), 'v' (dividends only)
+  }).then(jsons=>{
+    //修改 jsons
+    const array = jsons.map(json=>{
+      return {
+        'Date': new Date(json['date']).toLocaleDateString().replace(/\//g,'-'),
+        // 'Open':json['open'],
+        // 'Hight':json['high'],
+        // 'Low':json['low'],
+        'Close':json['close'],
+        'Volume':json['volume']
+      };
+    })
+    // console.log('n',array)
+    //排小到大
+    const stringTryNumber = (text)=>{
+      let array = text['Date'].split('-')
+      let year = array[0].toString()
+      let month = array[1]>9?array[1].toString():'0'+ array[1]
+      let day = array[2]>9?array[2].toString():'0'+ array[2]
+      return Number(year+month+day)
+    }
+    array.sort((o1,o2)=>{
+      return stringTryNumber(o1)-stringTryNumber(o2)
+    })
+    return array;
+  });
 }
 async function stockExdividend(stockNo){
   //除息
@@ -122,7 +154,7 @@ async function stockYield(stockNo,value,yieldValue){
 
   //沒有值或1/1號就抓取資料
   if(!yieldValue.length || (month==1 && date==1)){
-    //抓取5年內股利
+    console.log('抓取5年內股利')
     const jsonUrl = 'https://www.twse.com.tw/zh/ETF/etfDiv'
     let year = Number(dt.getFullYear());//2022
     for(let j=0;j<5;j++){
@@ -160,10 +192,10 @@ async function stockYield(stockNo,value,yieldValue){
       })
     }
   }else{
+    console.log('取得股利')
     yearArray = JSON.parse(yieldValue)
   }
 
-  console.log(yearArray)
   //(5年)平均股利
   const yearTotle = yearArray.reduce((previous,current)=>previous+current.yearExdividend,0)
   const yearLength = yearArray.length
@@ -195,11 +227,16 @@ async function stockYield(stockNo,value,yieldValue){
   }
 }
 function stockPercentage(stockData,time){
+
   const end = stockData[stockData.length-1]['Close']
   const start = stockData[stockData.length-(1+time)]?.Close
+  
   //https://bobbyhadz.com/blog/javascript-cannot-read-property-of-undefined
+ 
   if(start){
-    return (((end-start)/start)*100).toFixed(2)+'%'
+    const percentage = (((end-start)/start)*100).toFixed(2)+'%'
+    console.log(time,end,start,percentage)
+    return percentage
   }else{
     return '0%'
   }

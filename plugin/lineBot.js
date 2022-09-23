@@ -371,6 +371,12 @@ const stockSearchX = async(event)=>{
 const stockSearch = async(event)=>{
   const sheet = await googleSheetGetData('340899742').then(sheet=>sheet)
   const rows = await sheet.getRows();
+  const dt = new Date();
+  const year = Number(dt.getFullYear());//2022
+  const month = Number(dt.getMonth())+1;//8
+  const day = dt.getDate();//30
+  const hours = dt.getHours();//30
+  const endDay = `${year}-${month}-${day}`
   let message = []
   for (let [rowIndex, row] of rows.entries()) {
     const stockNames = row['stock']
@@ -385,19 +391,20 @@ const stockSearch = async(event)=>{
     if(value){
       // console.log('have value')
       value = JSON.parse(value)
-      const valueLastDate = value[value.length-1]['Date'].split('/')[2]
-      const dt = new Date();
-      // const year = Number(dt.getFullYear());//2022
-      // const month = Number(dt.getMonth())+1;//8
-      // const hours = dt.getHours();//30
-      //Number(valueLastDate[0])+1911!=year || Number(valueLastDate[1])!=month || (Number(valueLastDate[2])<date && hours>18)
-      const date = dt.getDate();//30
+      const valueLastDate = value[value.length-1]['Date']
+      const valueLastDay = Number(valueLastDate.split('-')[2])
+      //Number(valueLastDay[0])+1911!=year || Number(valueLastDay[1])!=month || (Number(valueLastDay[2])<date && hours>18)
+      
       //日期小於今天取值
-      if(Number(valueLastDate)!=date && Number(valueLastDate)<date){
-        console.log('日期小於今天取值')
-        const datas = await stockGetData(stockNo,1)
-        if(typeof datas=='string')return message.push(datas);//回傳錯誤請求
-        value.push(datas[datas.length-1])
+      if(valueLastDay!=day && valueLastDay<day){
+        
+        const datas = await stockGetData(stockNo,valueLastDate,endDay)
+        // if(typeof datas=='string')return message.push(datas);//回傳錯誤請求
+        const datasLast = datas[datas.length-1]
+        console.log('今天日期',day,'小於',valueLastDay,'目前日期',valueLastDate,'抓取日期',datasLast['Date'])
+        if(valueLastDate!=datasLast['Date']){
+          value.push(datasLast)
+        }
       }
       //超過600筆 只取600筆
       if(value.length>900){
@@ -405,16 +412,17 @@ const stockSearch = async(event)=>{
         value.splice(0,1)
       }
     }else{
-      console.log('no value 就取3個月')
-      value = await stockGetData(stockNo,3)
-      if(typeof value=='string')return message.push(value);//回傳錯誤請求
+      let starDay = `${year-3}-${month}-${day}`
+      value = await stockGetData(stockNo,starDay,endDay)
+      console.log('no value 就取3年,length:',value.length)
+      // if(typeof value=='string')return message.push(value);//回傳錯誤請求
     }
 
     //date,price
     const todayData = value[value.length-1]
-    let todayTimeArray = todayData['Date'].split('/')
-    todayTimeArray = Number(todayTimeArray[0])+1911+'/'+todayTimeArray[1]+'/'+todayTimeArray[2]
-    rows[rowIndex].date = todayTimeArray
+    // let todayTimeArray = todayData['Date'].split('-')
+    // todayTimeArray = Number(todayTimeArray[0])+1911+'-'+todayTimeArray[1]+'-'+todayTimeArray[2]
+    // rows[rowIndex].date = todayData['Date']
     rows[rowIndex].price = todayData['Close']
 
     //netWorth 淨值
@@ -426,6 +434,7 @@ const stockSearch = async(event)=>{
     rows[rowIndex].monthPercentage = stockPercentage(value,20)
     rows[rowIndex].halfYearPercentage = stockPercentage(value,120)
     rows[rowIndex].yearPercentage = stockPercentage(value,240)
+    rows[rowIndex].twoYearPercentage = stockPercentage(value,480)
 
     //yearHightPrice,yearLowPrice 
     const yearPrice = stockYearPrice(value)
@@ -434,17 +443,17 @@ const stockSearch = async(event)=>{
     rows[rowIndex].yearDifference = yearPrice['diffind']
 
     //exdividend 除息
-    rows[rowIndex].exdividendDay = await stockExdividend(stockNo)
+    // rows[rowIndex].exdividendDay = await stockExdividend(stockNo)
 
     //yield 殖利率
     const yield = await stockYield(stockNo,value,yieldValue)
-    rows[rowIndex].exdividendAverage = yield['exdividendAverage']
-    rows[rowIndex].exdividendBefore = yield['exdividendBefore']
-    rows[rowIndex].exdividendBefore1 = yield['exdividendBefore1']
-    rows[rowIndex].exdividendBefore2 = yield['exdividendBefore2']
+    // rows[rowIndex].exdividendAverage = yield['exdividendAverage']
+    // rows[rowIndex].exdividendBefore = yield['exdividendBefore']
+    // rows[rowIndex].exdividendBefore1 = yield['exdividendBefore1']
+    // rows[rowIndex].exdividendBefore2 = yield['exdividendBefore2']
     rows[rowIndex].nowYield = yield['nowYield']
-    rows[rowIndex].monthYield = yield['monthYield']
-    rows[rowIndex].threeMonthYield = yield['threeMonthYield']
+    // rows[rowIndex].monthYield = yield['monthYield']
+    // rows[rowIndex].threeMonthYield = yield['threeMonthYield']
     rows[rowIndex].halfYearYield = yield['halfYearYield']
     rows[rowIndex].yearYield = yield['yearYield']
     rows[rowIndex].yieldValue = JSON.stringify(yield['yearArray'])
