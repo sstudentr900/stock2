@@ -83,9 +83,14 @@ async function stockGetData(stockNo,monthLength=3){
 async function stockExdividend(stockNo){
   //除息
   const jsonUrl = 'https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL'
-  return await stockPromise({url: jsonUrl,method: "GET"})
+  const result = 0
+  let exdividend  = await stockPromise({url: jsonUrl,method: "GET"})
   .then(body=>JSON.parse(body))
   .then(datas=>datas.filter(data=>data.Code==stockNo))
+  if(exdividend){
+    result = `${exdividend[0]['Date']} / ${Number(exdividend[0]['CashDividend']).toFixed(2)}`
+  }
+  return result
 }
 async function stockNetWorth(stockNo){
   //淨值
@@ -94,14 +99,14 @@ async function stockNetWorth(stockNo){
   .then(body=>JSON.parse(body))
   .then(data=>data.a1)
   .then(a1s=>{
-    let result = false;
+    let result = 0;
     for(a1 of a1s){
       const msgs = a1.msgArray
       if(msgs){
         for(msg of msgs){
           // console.log(msg.a,stockNo)
           if(msg.a==stockNo){
-            result = msg
+            result = `${msg.f} / ${msg.g}%` 
           }
         }
       }
@@ -116,7 +121,7 @@ async function stockYield(stockNo,value,yieldValue){
   let yearArray = [];
 
   //沒有值或1/1號就抓取資料
-  if(!yieldValue || (month==1 && date==1)){
+  if(!yieldValue.length || (month==1 && date==1)){
     //抓取5年內股利
     const jsonUrl = 'https://www.twse.com.tw/zh/ETF/etfDiv'
     let year = Number(dt.getFullYear());//2022
@@ -155,7 +160,7 @@ async function stockYield(stockNo,value,yieldValue){
       })
     }
   }else{
-    yearArray = JSON.parse(yieldValue)
+    yearArray = yieldValue
   }
 
   //(5年)平均股利
