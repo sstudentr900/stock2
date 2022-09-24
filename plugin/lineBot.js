@@ -3,7 +3,7 @@ const axios = require('axios');
 const linebot = require('linebot');
 const config = require("./config");
 const { googleSheetGetData } = require("./googleSheet");
-const { stockStart,stockGetData,stockPercentage,stockYearPrice,stockNetWorth,stockExdividend,stockYield } = require("./stock");
+const { stockStart,stockGetData,stockPrice,stockYearPrice,stockNetWorth,stockExdividend,stockYield } = require("./stock");
 const userId = config.lineID;//Your User ID
 // 用於辨識Line Channel的資訊
 const bot = linebot({
@@ -387,24 +387,19 @@ const stockSearch = async(event)=>{
     let yieldValue = row['yieldValue']?row['yieldValue']:[]
     let value = row['value']
     console.log('stockNames',stockNo,stockName)
+
     //get value
     if(value){
       // console.log('have value')
       value = JSON.parse(value)
       const valueLastDate = value[value.length-1]['Date']
       const valueLastDay = Number(valueLastDate.split('-')[2])
-      //Number(valueLastDay[0])+1911!=year || Number(valueLastDay[1])!=month || (Number(valueLastDay[2])<date && hours>18)
-      
-      //日期小於今天取值
-      if(valueLastDay!=day && valueLastDay<day){
-        
-        const datas = await stockGetData(stockNo,valueLastDate,endDay)
-        // if(typeof datas=='string')return message.push(datas);//回傳錯誤請求
-        const datasLast = datas[datas.length-1]
-        console.log('今天日期',day,'小於',valueLastDay,'目前日期',valueLastDate,'抓取日期',datasLast['Date'])
-        if(valueLastDate!=datasLast['Date']){
+      const datas = await stockGetData(stockNo,valueLastDate,endDay)
+      // if(typeof datas=='string')return message.push(datas);//回傳錯誤請求
+      const datasLast = datas[datas.length-1]
+      console.log('日期小於今天且取的值不能和最後一筆一樣',day,'小於',valueLastDay,'目前日期',valueLastDate,'抓取日期',datasLast['Date'])
+      if(valueLastDay!=day && valueLastDay<day && valueLastDate!=datasLast['Date']){
           value.push(datasLast)
-        }
       }
       //超過600筆 只取600筆
       if(value.length>900){
@@ -428,13 +423,14 @@ const stockSearch = async(event)=>{
     //netWorth 淨值
     rows[rowIndex].netWorth = await stockNetWorth(stockNo) 
 
-    //dayPercentage,weekPercentage,monthPercentage,halfYearPercentage,yearPercentage
-    rows[rowIndex].dayPercentage = stockPercentage(value,3)
-    rows[rowIndex].weekPercentage = stockPercentage(value,5)
-    rows[rowIndex].monthPercentage = stockPercentage(value,20)
-    rows[rowIndex].halfYearPercentage = stockPercentage(value,120)
-    rows[rowIndex].yearPercentage = stockPercentage(value,240)
-    rows[rowIndex].twoYearPercentage = stockPercentage(value,480)
+    //dayPrice,weekPrice,monthPrice,halfYearPrice,yearPrice
+    rows[rowIndex].dayPrice = stockPrice(value,3)
+    rows[rowIndex].weekPrice = stockPrice(value,5)
+    rows[rowIndex].monthPrice = stockPrice(value,20)
+    rows[rowIndex].halfYearPrice = stockPrice(value,120)
+    rows[rowIndex].yearPrice = stockPrice(value,240)
+    rows[rowIndex].twoYearPrice = stockPrice(value,480)
+    rows[rowIndex].threeYearPrice = stockPrice(value,720)
 
     //yearHightPrice,yearLowPrice 
     const yearPrice = stockYearPrice(value)

@@ -226,7 +226,7 @@ async function stockYield(stockNo,value,yieldValue){
     yearArray
   }
 }
-function stockPercentage(stockData,time){
+function stockPrice(stockData,time){
 
   const end = stockData[stockData.length-1]['Close']
   const start = stockData[stockData.length-(1+time)]?.Close
@@ -320,7 +320,7 @@ function stockStart(stockNo,stockName,method,stockData) {
 module.exports={
   stockStart,
   stockGetData,
-  stockPercentage,
+  stockPrice,
   stockYearPrice,
   stockNetWorth,
   stockExdividend,
