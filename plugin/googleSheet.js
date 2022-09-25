@@ -43,11 +43,12 @@ const googleSheetGetData = async(id)=>{
   // })
 
   
-  //save
-  // googleSheetGetData('340899742')
-  // .then(async(sheet)=>{
-  //   await sheet.addRow({'name':value});
-  // })
+  //append 
+  // const larryRow = await sheet.addRow({ name: 'Larry Page', email: 'larry@google.com' });
+  // const moreRows = await sheet.addRows([
+  //   { name: 'Sergey Brin', email: 'sergey@google.com' },
+  //   { name: 'Eric Schmidt', email: 'eric@google.com' },
+  // ]);
 
   return sheet
 }

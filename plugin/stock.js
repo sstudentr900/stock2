@@ -84,12 +84,16 @@ async function stockGetData(stockNo,from,to){
     symbol: `${stockNo}.TW`,
     from: from,
     to: to,
+    period: 'd'
     // period: 'd'  // 'd' (daily), 'w' (weekly), 'm' (monthly), 'v' (dividends only)
   }).then(jsons=>{
     //修改 jsons
     const array = jsons.map(json=>{
+      // const date = new Date(json['date']).toLocaleDateString().replace(/\//g,'-')
+      let date = new Date(json['date']).toLocaleDateString().split('/')
+      date = `${date[0]}-${date[1]>9?date[1].toString():'0'+ date[1]}-${date[2]>9?date[2].toString():'0'+ date[2]}`
       return {
-        'Date': new Date(json['date']).toLocaleDateString().replace(/\//g,'-'),
+        'Date': date,
         // 'Open':json['open'],
         // 'Hight':json['high'],
         // 'Low':json['low'],
@@ -102,8 +106,8 @@ async function stockGetData(stockNo,from,to){
     const stringTryNumber = (text)=>{
       let array = text['Date'].split('-')
       let year = array[0].toString()
-      let month = array[1]>9?array[1].toString():'0'+ array[1]
-      let day = array[2]>9?array[2].toString():'0'+ array[2]
+      let month = array[1].toString()
+      let day = array[2].toString()
       return Number(year+month+day)
     }
     array.sort((o1,o2)=>{
@@ -125,6 +129,7 @@ async function stockExdividend(stockNo){
   return result
 }
 async function stockNetWorth(stockNo){
+  console.log('stockNetWorth')
   //淨值
   const jsonUrl = 'https://mis.twse.com.tw/stock/data/all_etf.txt?1663653801433'
   return await stockPromise({url: jsonUrl,method: "GET"})
@@ -146,14 +151,14 @@ async function stockNetWorth(stockNo){
     return result;
   })
 }
-async function stockYield(stockNo,value,yieldValue){
+async function stockYield(stockNo,stockData,yieldValue){
   const dt = new Date();
   const month = Number(dt.getMonth())+1;
   const date = Number(dt.getDate())
   let yearArray = [];
 
   //沒有值或1/1號就抓取資料
-  if(!yieldValue.length || (month==1 && date==1)){
+  if(!yieldValue || (month==1 && date==1)){
     console.log('抓取5年內股利')
     const jsonUrl = 'https://www.twse.com.tw/zh/ETF/etfDiv'
     let year = Number(dt.getFullYear());//2022
@@ -192,18 +197,27 @@ async function stockYield(stockNo,value,yieldValue){
       })
     }
   }else{
-    console.log('取得股利')
+    console.log('取得傳入股利')
     yearArray = JSON.parse(yieldValue)
   }
 
+  if(!yearArray.length){
+    console.log('沒有股利')
+    return {
+      nowYield: 0,
+      halfYearYield: 0,
+      yearYield: 0,
+      yearArray:0
+    }
+  }
   //(5年)平均股利
   const yearTotle = yearArray.reduce((previous,current)=>previous+current.yearExdividend,0)
   const yearLength = yearArray.length
   const exdividendAverage = Number((yearTotle/yearLength).toFixed(2))
 
   //當前殖利率(股票殖利率 = 現金股利 ÷ 股價)
-  const yieldFn = (value,exdividendAverage,day)=>{
-    const nowClose = value[value.length-day]?.Close
+  const yieldFn = (stockData,exdividendAverage,day)=>{
+    const nowClose = stockData[stockData.length-day]?.Close
     if(nowClose){
       const num = ((exdividendAverage/nowClose)*100).toFixed(2)+'%'
       return {yield:num,close:nowClose};
@@ -212,30 +226,26 @@ async function stockYield(stockNo,value,yieldValue){
     }
   }
 
-  // console.log(yieldValue,yearArray,exdividendAverage)
   return {
-    nowYield: yieldFn(value,exdividendAverage,1)['yield'],
-    monthYield: yieldFn(value,exdividendAverage,20)['yield'],
-    threeMonthYield: yieldFn(value,exdividendAverage,60)['yield'],
-    halfYearYield: yieldFn(value,exdividendAverage,120)['yield'],
-    yearYield: yieldFn(value,exdividendAverage,240)['yield'],
-    exdividendBefore: yearArray[0]?yearArray[0].yearExdividend:0,
-    exdividendBefore1: yearArray[1]?yearArray[1].yearExdividend:0,
-    exdividendBefore2: yearArray[2]?yearArray[2].yearExdividend:0,
-    exdividendAverage,
-    yearArray
+    nowYield: yieldFn(stockData,exdividendAverage,1)['yield'],
+    // monthYield: yieldFn(stockData,exdividendAverage,20)['yield'],
+    // threeMonthYield: yieldFn(stockData,exdividendAverage,60)['yield'],
+    halfYearYield: yieldFn(stockData,exdividendAverage,120)['yield'],
+    yearYield: yieldFn(stockData,exdividendAverage,240)['yield'],
+    // exdividendBefore: yearArray[0]?yearArray[0].yearExdividend:0,
+    // exdividendBefore1: yearArray[1]?yearArray[1].yearExdividend:0,
+    // exdividendBefore2: yearArray[2]?yearArray[2].yearExdividend:0,
+    // exdividendAverage,
+    yearArray:JSON.stringify(yearArray)
   }
 }
 function stockPrice(stockData,time){
-
   const end = stockData[stockData.length-1]['Close']
   const start = stockData[stockData.length-(1+time)]?.Close
-  
   //https://bobbyhadz.com/blog/javascript-cannot-read-property-of-undefined
- 
   if(start){
     const percentage = (((end-start)/start)*100).toFixed(2)+'%'
-    console.log(time,end,start,percentage)
+    // console.log(time,end,start,percentage)
     return percentage
   }else{
     return '0%'
@@ -246,6 +256,112 @@ function stockYearPrice(stockData){
   let minClose = stockData.reduce((a,b)=>a.Close<=b.Close?a:b)['Close']
   let diffind = (((maxClose-minClose)/maxClose)*100).toFixed(2)+'%'
   return {'max':maxClose,'min':minClose,'diffind':diffind} 
+}
+async function stockGrap({stockNo,stockName,stockData,yieldValue,method}){
+  //
+  const result = {}
+  const dt = new Date();
+  const year = Number(dt.getFullYear());//2022
+  let month = Number(dt.getMonth())+1;//8
+  month = month>9?month:'0'+month
+  let day = dt.getDate();//30
+  day = day>9?day:'0'+day
+  const hours = dt.getHours();//30
+  const endDay = `${year}-${month}-${day}`
+
+  //stock
+  result.stock = `${stockName}(${stockNo})`
+
+  //stockData
+  if(stockData){
+    // console.log('have value')
+    stockData = JSON.parse(stockData)
+    const valueLastDate = stockData[stockData.length-1]['Date']
+    const valueLastDay = Number(valueLastDate.split('-')[2])
+    const datas = await stockGetData(stockNo,valueLastDate,endDay)
+    // if(typeof datas=='string')return message.push(datas);//回傳錯誤請求
+    const datasLast = datas[datas.length-1]
+    // console.log('日期小於今天且取的值不能和最後一筆一樣',day,'小於',valueLastDay,'目前日期',valueLastDate,'抓取日期',datasLast['Date'])
+    if(valueLastDay!=day && valueLastDay<day && valueLastDate!=datasLast['Date']){
+      stockData.push(datasLast)
+    }
+
+    console.log('取得傳入的stockData',stockData.length)
+    if(stockData.length>900){
+      console.log('超過900筆 只取900筆',stockData.length)
+      //刪除第一筆
+      stockData.splice(0,1)
+    }
+    result.stockData = JSON.stringify(stockData)
+  }
+  if(!stockData){
+    let starDay = `${year-3}-${month}-${day}`
+    console.log(`取 ${starDay} - ${endDay} stockData`)
+    stockData = await stockGetData(stockNo,starDay,endDay)
+    if(stockData.length){
+      console.log('stockData,length:',stockData.length)
+      result.stockData = JSON.stringify(stockData)
+    }else{
+      console.log('no stockData 跳出')
+      return false;
+    }
+    // if(typeof value=='string')return message.push(value);//回傳錯誤請求
+  }
+
+  //date,price
+  const todayData = stockData[stockData.length-1]
+  // rows[rowIndex].date = todayData['Date']
+  
+  if(!todayData?.Close){
+    console.log('沒有今日收盤價跳出')
+    return false;
+  }
+  console.log('今日收盤價',todayData)
+  result.price = todayData['Close']
+
+  //netWorth 淨值
+  result.netWorth = await stockNetWorth(stockNo) 
+  
+
+  //dayPrice,weekPrice,monthPrice,halfYearPrice,yearPrice
+  console.log('stockPrice')
+  result.dayPrice = stockPrice(stockData,3)
+  result.weekPrice = stockPrice(stockData,5)
+  result.monthPrice = stockPrice(stockData,20)
+  result.halfYearPrice = stockPrice(stockData,120)
+  result.yearPrice = stockPrice(stockData,240)
+  result.twoYearPrice = stockPrice(stockData,480)
+  result.threeYearPrice = stockPrice(stockData,720)
+
+  //yearHightPrice,yearLowPrice 
+  // const yearPrice = stockYearPrice(value)
+  // result.yearHightPrice = yearPrice['max']
+  // result.yearLowPrice = yearPrice['min']
+  // result.yearDifference = yearPrice['diffind']
+
+  //exdividend 除息
+  // result.exdividendDay = await stockExdividend(stockNo)
+
+  //yield 殖利率
+  const yield = await stockYield(stockNo,stockData,yieldValue)
+  // result.exdividendAverage = yield['exdividendAverage']
+  // result.exdividendBefore = yield['exdividendBefore']
+  // result.exdividendBefore1 = yield['exdividendBefore1']
+  // result.exdividendBefore2 = yield['exdividendBefore2']
+  // result.monthYield = yield['monthYield']
+  // result.threeMonthYield = yield['threeMonthYield']
+  result.halfYearYield = yield['halfYearYield']
+  result.nowYield = yield['nowYield']
+  result.yearYield = yield['yearYield']
+  result.yieldValue = yield['yearArray']
+  
+  //method
+  if(method){
+    result.methodReturn = stockMethod({stockNo,stockName,method,stockData})
+  }
+
+  //console.log('result',result)
+  return result
 }
 function stockGetkdData(stockData){
   let day = 9
@@ -307,9 +423,9 @@ function stockKdFn(stockData,stockNo,stockName,method,dataSymbol){
   console.log('kdFn_message',message)
   return message;
 }
-function stockStart(stockNo,stockName,method,stockData) {
+function stockMethod({stockNo,stockName,method,stockData}) {
   //kd
-  console.log(`stockStart ${stockNo}`)
+  console.log(`stockMethod ${stockNo}`)
   if(~method.indexOf('k')){
     return stockKdFn(stockData,stockNo,stockName,method,'K')
   }
@@ -317,15 +433,15 @@ function stockStart(stockNo,stockName,method,stockData) {
     return stockKdFn(stockData,stockNo,stockName,method,'D')
   }
 };
+
 module.exports={
-  stockStart,
+  stockMethod,
   stockGetData,
   stockPrice,
   stockYearPrice,
   stockNetWorth,
   stockExdividend,
   stockYield,
+  stockGrap,
   stockPromise
 }
-
-// stockStart();
