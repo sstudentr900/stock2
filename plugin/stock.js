@@ -276,14 +276,20 @@ async function stockGrap({stockNo,stockName,stockData,yieldValue,method}){
   if(stockData){
     // console.log('have value')
     stockData = JSON.parse(stockData)
-    const valueLastDate = stockData[stockData.length-1]['Date']
-    const valueLastDay = Number(valueLastDate.split('-')[2])
-    const datas = await stockGetData(stockNo,valueLastDate,endDay)
-    // if(typeof datas=='string')return message.push(datas);//回傳錯誤請求
-    const datasLast = datas[datas.length-1]
-    // console.log('日期小於今天且取的值不能和最後一筆一樣',day,'小於',valueLastDay,'目前日期',valueLastDate,'抓取日期',datasLast['Date'])
-    if(valueLastDay!=day && valueLastDay<day && valueLastDate!=datasLast['Date']){
-      stockData.push(datasLast)
+    const sheelLastDate = stockData[stockData.length-1]['Date']
+    //sheel和今天日期不一樣
+    if(sheelLastDate!=endDay){
+      // if(typeof datas=='string')return message.push(datas);//回傳錯誤請求
+      console.log('抓取開始日期',sheelLastDate,'結束日期',endDay)
+      const datas = await stockGetData(stockNo,sheelLastDate,endDay)
+      const datasLastDate = datas[datas.length-1]['Date']
+      //sheel和抓取最後一天日期不一樣
+      if(sheelLastDate!=datasLastDate){
+        for(data of datas){
+          // console.log(data)
+          stockData.push(data)
+        }
+      }
     }
 
     console.log('取得傳入的stockData',stockData.length)
@@ -308,16 +314,23 @@ async function stockGrap({stockNo,stockName,stockData,yieldValue,method}){
     // if(typeof value=='string')return message.push(value);//回傳錯誤請求
   }
 
-  //date,price
+  //date
   const todayData = stockData[stockData.length-1]
-  // rows[rowIndex].date = todayData['Date']
   
+  //price
   if(!todayData?.Close){
     console.log('沒有今日收盤價跳出')
     return false;
   }
   console.log('今日收盤價',todayData)
   result.price = todayData['Close']
+
+  //volume
+  if(!todayData?.Volume || todayData.Volume<201){
+    console.log('沒有今日成交量或小於200')
+    return false;
+  }
+  result.volume = todayData['Volume']
 
   //netWorth 淨值
   result.netWorth = await stockNetWorth(stockNo) 

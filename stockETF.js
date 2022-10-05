@@ -13,8 +13,6 @@ const stockETF = async(event)=>{
     const stockNo = etf.symbol.split('.')[0]
     let value = []
     let yieldValue = []
-    console.log(etf.symbolName,stockNo)
-
     //value
     for (let [rowIndex, row] of rows.entries()) {
       if(row['stockNo'] && row['value'] && stockNo==row['stockNo']){

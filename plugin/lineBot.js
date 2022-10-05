@@ -223,7 +223,7 @@ const stockSearch = async(event)=>{
   let sheetAddRow = []
   for(const [index,value] of etfData.entries()){
     //限制幾筆
-    //if(index>2)break; 
+    if(index>2)break; 
     console.log('stockNo',value['V1'],'stockName',value['V2'],'index',index)
     let isSheet = false
     for (let [rowIndex, row] of rows.entries()) {
@@ -240,6 +240,7 @@ const stockSearch = async(event)=>{
         const stockRecult = await stockGrap({stockNo,stockName,yieldValue,stockData,method})
         if(!stockRecult)continue;
         rows[rowIndex].price = stockRecult.price
+        rows[rowIndex].volume = stockRecult.volume
         rows[rowIndex].netWorth = stockRecult.netWorth
         rows[rowIndex].dayPrice = stockRecult.dayPrice
         rows[rowIndex].weekPrice = stockRecult.weekPrice
