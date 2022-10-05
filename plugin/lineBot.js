@@ -223,7 +223,7 @@ const stockSearch = async(event)=>{
   let sheetAddRow = []
   for(const [index,value] of etfData.entries()){
     //限制幾筆
-    if(index>2)break; 
+    // if(index>2)break; 
     console.log('stockNo',value['V1'],'stockName',value['V2'],'index',index)
     let isSheet = false
     for (let [rowIndex, row] of rows.entries()) {
