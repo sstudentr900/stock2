@@ -253,6 +253,9 @@ const stockSearch = async(event)=>{
         rows[rowIndex].halfYearYield = stockRecult.halfYearYield
         rows[rowIndex].yearYield = stockRecult.yearYield
         rows[rowIndex].yieldValue = stockRecult.yieldValue
+        rows[rowIndex].cheapPrice = stockRecult.cheapPrice
+        rows[rowIndex].fairPrice = stockRecult.fairPrice
+        rows[rowIndex].expensivePrice = stockRecult.expensivePrice
         rows[rowIndex].stockData = stockRecult.stockData
         rows[rowIndex].methodReturn = stockRecult.methodReturn
         rows[rowIndex].save()

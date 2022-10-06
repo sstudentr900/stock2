@@ -114,6 +114,9 @@ async function stockGetData(stockNo,from,to){
       return stringTryNumber(o1)-stringTryNumber(o2)
     })
     return array;
+  }).catch(reason=>{
+    console.log('crud error',reason)
+    return false
   });
 }
 async function stockExdividend(stockNo){
@@ -207,7 +210,10 @@ async function stockYield(stockNo,stockData,yieldValue){
       nowYield: 0,
       halfYearYield: 0,
       yearYield: 0,
-      yearArray:0
+      yearArray:0,
+      cheapPrice:0,
+      fairPrice: 0,
+      expensivePrice: 0
     }
   }
   //(5年)平均股利
@@ -215,7 +221,7 @@ async function stockYield(stockNo,stockData,yieldValue){
   const yearLength = yearArray.length
   const exdividendAverage = Number((yearTotle/yearLength).toFixed(2))
 
-  //當前殖利率(股票殖利率 = 現金股利 ÷ 股價)
+  //n天殖利率(股票殖利率 = 現金股利 ÷ 股價)
   const yieldFn = (stockData,exdividendAverage,day)=>{
     const nowClose = stockData[stockData.length-day]?.Close
     if(nowClose){
@@ -225,6 +231,8 @@ async function stockYield(stockNo,stockData,yieldValue){
       return {yield:'0%',close:0};
     }
   }
+
+  //便宜 昂貴 合理
 
   return {
     nowYield: yieldFn(stockData,exdividendAverage,1)['yield'],
@@ -236,7 +244,10 @@ async function stockYield(stockNo,stockData,yieldValue){
     // exdividendBefore1: yearArray[1]?yearArray[1].yearExdividend:0,
     // exdividendBefore2: yearArray[2]?yearArray[2].yearExdividend:0,
     // exdividendAverage,
-    yearArray:JSON.stringify(yearArray)
+    yearArray:JSON.stringify(yearArray),
+    cheapPrice: exdividendAverage*16,
+    fairPrice: exdividendAverage*20,
+    expensivePrice: exdividendAverage*32
   }
 }
 function stockPrice(stockData,time){
@@ -285,6 +296,10 @@ async function stockGrap({stockNo,stockName,stockData,yieldValue,method}){
       const datasLastDate = datas[datas.length-1]['Date']
       //sheel和抓取最後一天日期不一樣
       if(sheelLastDate!=datasLastDate){
+        //刪除第一筆
+        if(datas.length>1){
+          datas.splice(0,1)
+        }
         for(data of datas){
           // console.log(data)
           stockData.push(data)
@@ -367,6 +382,9 @@ async function stockGrap({stockNo,stockName,stockData,yieldValue,method}){
   result.nowYield = yield['nowYield']
   result.yearYield = yield['yearYield']
   result.yieldValue = yield['yearArray']
+  result.cheapPrice = yield['cheapPrice']
+  result.fairPrice = yield['fairPrice']
+  result.expensivePrice = yield['expensivePrice']
   
   //method
   if(method){
