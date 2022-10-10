@@ -132,7 +132,7 @@ async function stockExdividend(stockNo){
   return result
 }
 async function stockNetWorth(stockNo){
-  console.log('stockNetWorth')
+  console.log('跑淨值')
   //淨值
   const jsonUrl = 'https://mis.twse.com.tw/stock/data/all_etf.txt?1663653801433'
   return await stockPromise({url: jsonUrl,method: "GET"})
@@ -291,8 +291,12 @@ async function stockGrap({stockNo,stockName,stockData,yieldValue,method}){
     //sheel和今天日期不一樣
     if(sheelLastDate!=endDay){
       // if(typeof datas=='string')return message.push(datas);//回傳錯誤請求
-      console.log('抓取開始日期',sheelLastDate,'結束日期',endDay)
+      console.log('抓取日期',sheelLastDate,'-',endDay)
       const datas = await stockGetData(stockNo,sheelLastDate,endDay)
+      if(!datas.length){
+        console.log('抓取不到資料跳出')
+        return false;
+      }
       const datasLastDate = datas[datas.length-1]['Date']
       //sheel和抓取最後一天日期不一樣
       if(sheelLastDate!=datasLastDate){
@@ -301,13 +305,13 @@ async function stockGrap({stockNo,stockName,stockData,yieldValue,method}){
           datas.splice(0,1)
         }
         for(data of datas){
-          // console.log(data)
+          console.log('存入資料',data)
           stockData.push(data)
         }
       }
     }
 
-    console.log('取得傳入的stockData',stockData.length)
+    // console.log('取得傳入的stockData',stockData.length)
     if(stockData.length>900){
       console.log('超過900筆 只取900筆',stockData.length)
       //刪除第一筆
@@ -317,13 +321,13 @@ async function stockGrap({stockNo,stockName,stockData,yieldValue,method}){
   }
   if(!stockData){
     let starDay = `${year-3}-${month}-${day}`
-    console.log(`取 ${starDay} - ${endDay} stockData`)
+    console.log(`nodata 抓取日期 ${starDay} - ${endDay}`)
     stockData = await stockGetData(stockNo,starDay,endDay)
     if(stockData.length){
       console.log('stockData,length:',stockData.length)
       result.stockData = JSON.stringify(stockData)
     }else{
-      console.log('no stockData 跳出')
+      console.log('抓取不到資料跳出')
       return false;
     }
     // if(typeof value=='string')return message.push(value);//回傳錯誤請求
@@ -337,7 +341,6 @@ async function stockGrap({stockNo,stockName,stockData,yieldValue,method}){
     console.log('沒有今日收盤價跳出')
     return false;
   }
-  console.log('今日收盤價',todayData)
   result.price = todayData['Close']
 
   //volume
@@ -352,7 +355,7 @@ async function stockGrap({stockNo,stockName,stockData,yieldValue,method}){
   
 
   //dayPrice,weekPrice,monthPrice,halfYearPrice,yearPrice
-  console.log('stockPrice')
+  console.log('跑股票獲利3,5,20,120,240,480,720')
   result.dayPrice = stockPrice(stockData,3)
   result.weekPrice = stockPrice(stockData,5)
   result.monthPrice = stockPrice(stockData,20)
@@ -371,6 +374,7 @@ async function stockGrap({stockNo,stockName,stockData,yieldValue,method}){
   // result.exdividendDay = await stockExdividend(stockNo)
 
   //yield 殖利率
+  console.log('跑殖利率')
   const yield = await stockYield(stockNo,stockData,yieldValue)
   // result.exdividendAverage = yield['exdividendAverage']
   // result.exdividendBefore = yield['exdividendBefore']
@@ -386,10 +390,14 @@ async function stockGrap({stockNo,stockName,stockData,yieldValue,method}){
   result.fairPrice = yield['fairPrice']
   result.expensivePrice = yield['expensivePrice']
   
+
+  //kd
+
+
   //method
-  if(method){
-    result.methodReturn = stockMethod({stockNo,stockName,method,stockData})
-  }
+  // if(method){
+  //   result.methodReturn = stockMethod({stockNo,stockName,method,stockData})
+  // }
 
   //console.log('result',result)
   return result

@@ -1,123 +1,61 @@
 const { googleSheetGetData } = require("./plugin/googleSheet");
-const { stockPromise,stockStart,stockGetData,stockPercentage,stockYearPrice,stockNetWorth,stockExdividend,stockYield } = require("./plugin/stock");
+const { stockPromise,stockGrap } = require("./plugin/stock");
 
-const stockETF = async(event)=>{
-  const jsonUrl = 'https://tw.stock.yahoo.com/_td-stock/api/resource/StockServices.etfRanking;limit=100;offset=0;rankId=dividend?bkt=&device=desktop&ecma=modern&feature=ecmaModern%2CuseNewQuoteTabColor&intl=tw&lang=zh-Hant-TW&partner=none&prid=1g1o49lhiise4&region=TW&site=finance&tz=Asia%2FTaipei&ver=1.2.1466&returnMeta=true'
-  const etfData = await stockPromise({url: jsonUrl,method: "GET"}).then(body=>JSON.parse(body)).then(body=>body.data.list)
+const updataStock = async(event)=>{
   const sheet = await googleSheetGetData('340899742').then(sheet=>sheet)
-  const rows = await sheet.getRows();
-  const array = []
-  let message = []
-
-  for(etf of etfData){
-    const stockNo = etf.symbol.split('.')[0]
-    let value = []
-    let yieldValue = []
-    //value
-    for (let [rowIndex, row] of rows.entries()) {
-      if(row['stockNo'] && row['value'] && stockNo==row['stockNo']){
-        yieldValue = JSON.parse(row['yieldValue'])
-        value = JSON.parse(row['value'])
-        const valueLastDate = value[value.length-1]['Date'].split('/')[2]
-        const dt = new Date();
-        const date = dt.getDate();//30
-        //日期小於今天取值
-        if(Number(valueLastDate)!=date && Number(valueLastDate)<date){
-          console.log('日期小於今天取值')
-          const datas = await stockGetData(stockNo,1)
-          if(typeof datas=='string')return message.push(datas);//回傳錯誤請求
-          value.push(datas[datas.length-1])
-          break;
-        }
-      }
-    } 
-    //no value
-    if(!value.length){
-      console.log('no value 就取3個月')
-      value = await stockGetData(stockNo,3)
-      if(typeof value=='string')return message.push(value);//回傳錯誤請求
-    }
-    //超過900筆 只取900筆
-    if(value.length>900){
-      //刪除第一筆
-      value.splice(0,1)
-    }
-
-    //date,price
-    const todayData = value[value.length-1]
-    let todayTimeArray = todayData['Date'].split('/')
-    todayTimeArray = Number(todayTimeArray[0])+1911+'/'+todayTimeArray[1]+'/'+todayTimeArray[2]
-
-    //netWorth 淨值
-    // const netWorth = await stockNetWorth(stockNo)
-
-    //dayPercentage,weekPercentage,monthPercentage,halfYearPercentage,yearPercentage
-    // rows[rowIndex].dayPercentage = stockPercentage(value,3)
-    // rows[rowIndex].weekPercentage = stockPercentage(value,5)
-    // rows[rowIndex].monthPercentage = stockPercentage(value,20)
-    // rows[rowIndex].halfYearPercentage = stockPercentage(value,120)
-    // rows[rowIndex].yearPercentage = stockPercentage(value,240)
-
-
-    //yearHightPrice,yearLowPrice 
-    const yearPrice = stockYearPrice(value)
-    // rows[rowIndex].yearHightPrice = yearPrice['max']
-    // rows[rowIndex].yearLowPrice = yearPrice['min']
-    // rows[rowIndex].yearDifference = yearPrice['diffind']
-
-    //exdividend 除息
-    // const exdividendDay = await stockExdividend(stockNo)
-    // if(exdividendDay.length){
-    //   rows[rowIndex].exdividendDay = `${exdividendDay[0]['Date']} / ${Number(exdividendDay[0]['CashDividend']).toFixed(2)}` 
-    // }
-
-    //yield 殖利率
-    const yield = await stockYield(stockNo,value,yieldValue)
-    // if(yield){
-    //   console.log('monthYield',yield['monthYield'])
-    //   console.log('threeMonthYield',yield['threeMonthYield'])
-    //   rows[rowIndex].exdividendAverage = yield['exdividendAverage']
-    //   rows[rowIndex].exdividendBefore = yield['exdividendBefore']
-    //   rows[rowIndex].exdividendBefore1 = yield['exdividendBefore1']
-    //   rows[rowIndex].exdividendBefore2 = yield['exdividendBefore2']
-    //   rows[rowIndex].nowYield = yield['nowYield']
-    //   rows[rowIndex].monthYield = yield['monthYield']
-    //   rows[rowIndex].threeMonthYield = yield['threeMonthYield']
-    //   rows[rowIndex].halfYearYield = yield['halfYearYield']
-    //   rows[rowIndex].yearYield = yield['yearYield']
-    //   rows[rowIndex].yieldValue = JSON.stringify(yield['yearArray'])
-    // }
-
-    array.push({
-      'stockName':`${etf.symbolName}(${stockNo})`,
-      'value': JSON.stringify(value),
-      'date': todayTimeArray,
-      'price': todayData['Close'],
-      'netWorth': await stockNetWorth(stockNo),
-      'dayPercentage': stockPercentage(value,3),
-      'weekPercentage': stockPercentage(value,5),
-      'monthPercentage': stockPercentage(value,20),
-      'halfYearPercentage': stockPercentage(value,120),
-      'yearPercentage': stockPercentage(value,240),
-      'yearHightPrice': yearPrice['max'],
-      'yearLowPrice': yearPrice['min'],
-      'yearDifference': yearPrice['diffind'],
-      'exdividendDay': await stockExdividend(stockNo),
-      'exdividendAverage': yield['exdividendAverage'],
-      'exdividendBefore': yield['exdividendBefore'],
-      'exdividendBefore1': yield['exdividendBefore1'],
-      'exdividendBefore2': yield['exdividendBefore2'],
-      'nowYield': yield['nowYield'],
-      'monthYield': yield['monthYield'],
-      'threeMonthYield': yield['threeMonthYield'],
-      'halfYearYield': yield['halfYearYield'],
-      'yearYield': yield['yearYield'],
-      'yieldValue': JSON.stringify(yield['yieldValue']),
-    });
+  const sheetData = await sheet.getRows();
+  for (let [rowIndex, row] of sheetData.entries()) {
+    const stockNames = row['stockName']
+    console.log(stockNames)
+    if(!stockNames)continue;
+    const stockNo = stockNames.split('(')[1].split(')')[0]
+    const stockName = stockNames.split('(')[0]
+    const stockData = row['stockData']?row['stockData']:''
+    const yieldValue = row['yieldValue']?row['yieldValue']:''
+    const method = row['method']?row['method']:''
+    const stockRecult = await stockGrap({stockNo,stockName,yieldValue,stockData,method})
+    if(!stockRecult)continue;
+    // sheetData[rowIndex].stockName = stockName
+    sheetData[rowIndex].stockNo = stockNo
+    sheetData[rowIndex].price = stockRecult.price
+    sheetData[rowIndex].methodReturn = stockRecult.methodReturn
+    sheetData[rowIndex].stockData = stockRecult.stockData
+    sheetData[rowIndex].volume = stockRecult.volume
+    sheetData[rowIndex].netWorth = stockRecult.netWorth
+    sheetData[rowIndex].dayPrice = stockRecult.dayPrice
+    sheetData[rowIndex].weekPrice = stockRecult.weekPrice
+    sheetData[rowIndex].monthPrice = stockRecult.monthPrice
+    sheetData[rowIndex].halfYearPrice = stockRecult.halfYearPrice
+    sheetData[rowIndex].yearPrice = stockRecult.yearPrice
+    sheetData[rowIndex].twoYearPrice = stockRecult.twoYearPrice
+    sheetData[rowIndex].threeYearPrice = stockRecult.threeYearPrice
+    sheetData[rowIndex].nowYield = stockRecult.nowYield
+    sheetData[rowIndex].halfYearYield = stockRecult.halfYearYield
+    sheetData[rowIndex].yearYield = stockRecult.yearYield
+    sheetData[rowIndex].yieldValue = stockRecult.yieldValue
+    sheetData[rowIndex].cheapPrice = stockRecult.cheapPrice
+    sheetData[rowIndex].fairPrice = stockRecult.fairPrice
+    sheetData[rowIndex].expensivePrice = stockRecult.expensivePrice
+    sheetData[rowIndex].save()
   }
-  console.log(array)
-  //sheet addRows
-  await sheet.addRows(array);
 }
-
-stockETF()
+const updataStockName = async(event)=>{
+  const sheet = await googleSheetGetData('340899742').then(sheet=>sheet)
+  const sheetData = await sheet.getRows();
+  const ajaxUrl = 'https://etf.masterlink.com.tw/API/Data/F1_10_ETFPerf.json?t=0.8649854163488351';
+  const ajaxData = await stockPromise({url: ajaxUrl,method: "GET"}).then(body=>JSON.parse(body))
+  let sheetAddRow = []
+  for(const [etfIndex,ajaxRow] of ajaxData.entries()){
+    const sheetLength = sheetData.filter(({stockNo})=>stockNo == ajaxRow['V1']).length
+    if(sheetLength==0){
+      sheetAddRow.push({stockName:`${ajaxRow['V2']}`,stockNo:`${ajaxRow['V1']}`})
+    }
+  }
+  if(sheetAddRow.length){
+    //await sheet.addRows([{ stock: 'a'},{ stock: 'b' }]); save 多個
+    //await sheet.addRow({ stock: 'a'); save 單個
+    await sheet.addRows(sheetAddRow);
+  }
+}
+// updataStockName()
+updataStock()
