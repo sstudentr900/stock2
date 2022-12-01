@@ -162,7 +162,7 @@ async function stockYield(stockNo,stockData,yieldValue){
 
   //沒有值或1/1號就抓取資料
   if(!yieldValue || (month==1 && date==1)){
-    console.log('抓取5年內股利')
+    console.log('沒有股利不是1/1號抓取5年內股利')
     const jsonUrl = 'https://www.twse.com.tw/zh/ETF/etfDiv'
     let year = Number(dt.getFullYear());//2022
     for(let j=0;j<5;j++){
@@ -200,12 +200,12 @@ async function stockYield(stockNo,stockData,yieldValue){
       })
     }
   }else{
-    console.log('取得傳入股利')
+    console.log('取得data傳入股利資料')
     yearArray = JSON.parse(yieldValue)
   }
 
   if(!yearArray.length){
-    console.log('沒有股利')
+    console.log('沒有股利跳出')
     return {
       nowYield: 0,
       halfYearYield: 0,
@@ -213,9 +213,25 @@ async function stockYield(stockNo,stockData,yieldValue){
       yearArray:0,
       cheapPrice:0,
       fairPrice: 0,
-      expensivePrice: 0
+      expensivePrice: 0,
+      exdividendAverage: 0
     }
   }
+
+  if(yearArray.length<=2){
+    console.log('沒有股利年數小於2跳出')
+    return {
+      nowYield: 0,
+      halfYearYield: 0,
+      yearYield: 0,
+      yearArray:0,
+      cheapPrice:0,
+      fairPrice: 0,
+      expensivePrice: 0,
+      exdividendAverage: 0
+    }
+  }
+
   //(5年)平均股利
   const yearTotle = yearArray.reduce((previous,current)=>previous+current.yearExdividend,0)
   const yearLength = yearArray.length
@@ -232,22 +248,21 @@ async function stockYield(stockNo,stockData,yieldValue){
     }
   }
 
-  //便宜 昂貴 合理
-
   return {
-    nowYield: yieldFn(stockData,exdividendAverage,1)['yield'],
     // monthYield: yieldFn(stockData,exdividendAverage,20)['yield'],
     // threeMonthYield: yieldFn(stockData,exdividendAverage,60)['yield'],
-    halfYearYield: yieldFn(stockData,exdividendAverage,120)['yield'],
-    yearYield: yieldFn(stockData,exdividendAverage,240)['yield'],
+    // halfYearYield: yieldFn(stockData,exdividendAverage,120)['yield'],
+    // yearYield: yieldFn(stockData,exdividendAverage,240)['yield'],
     // exdividendBefore: yearArray[0]?yearArray[0].yearExdividend:0,
     // exdividendBefore1: yearArray[1]?yearArray[1].yearExdividend:0,
     // exdividendBefore2: yearArray[2]?yearArray[2].yearExdividend:0,
     // exdividendAverage,
-    yearArray:JSON.stringify(yearArray),
-    cheapPrice: exdividendAverage*16,
-    fairPrice: exdividendAverage*20,
-    expensivePrice: exdividendAverage*32
+    yearArray:JSON.stringify(yearArray), //殖利率資料
+    nowYield: yieldFn(stockData,exdividendAverage,1)['yield'],//殖利率
+    cheapPrice: exdividendAverage*16, //便宜 
+    fairPrice: exdividendAverage*20, //合理
+    expensivePrice: exdividendAverage*32, //昂貴
+    exdividendAverage: exdividendAverage //平均股利
   }
 }
 function stockPrice(stockData,time){
@@ -291,7 +306,7 @@ async function stockGrap({stockNo,stockName,stockData,yieldValue,method}){
     //sheel和今天日期不一樣
     if(sheelLastDate!=endDay){
       // if(typeof datas=='string')return message.push(datas);//回傳錯誤請求
-      console.log('抓取日期',sheelLastDate,'-',endDay)
+      console.log('抓取日期:',sheelLastDate,'-',endDay)
       const datas = await stockGetData(stockNo,sheelLastDate,endDay)
       if(!datas.length){
         console.log('抓取不到資料跳出')
@@ -302,10 +317,11 @@ async function stockGrap({stockNo,stockName,stockData,yieldValue,method}){
       if(sheelLastDate!=datasLastDate){
         //刪除第一筆
         if(datas.length>1){
+          console.log('刪除第一筆')
           datas.splice(0,1)
         }
         for(data of datas){
-          console.log('存入資料',data)
+          console.log('抓取資料存入:',data)
           stockData.push(data)
         }
       }
@@ -321,7 +337,7 @@ async function stockGrap({stockNo,stockName,stockData,yieldValue,method}){
   }
   if(!stockData){
     let starDay = `${year-3}-${month}-${day}`
-    console.log(`nodata 抓取日期 ${starDay} - ${endDay}`)
+    console.log(`沒有資料抓取新資料 ${starDay} - ${endDay}`)
     stockData = await stockGetData(stockNo,starDay,endDay)
     if(stockData.length){
       console.log('stockData,length:',stockData.length)
@@ -355,7 +371,7 @@ async function stockGrap({stockNo,stockName,stockData,yieldValue,method}){
   
 
   //dayPrice,weekPrice,monthPrice,halfYearPrice,yearPrice
-  console.log('跑股票獲利3,5,20,120,240,480,720')
+  console.log('跑3,5,20,120,240,480,720日股票報酬')
   result.dayPrice = stockPrice(stockData,3)
   result.weekPrice = stockPrice(stockData,5)
   result.monthPrice = stockPrice(stockData,20)
@@ -374,7 +390,7 @@ async function stockGrap({stockNo,stockName,stockData,yieldValue,method}){
   // result.exdividendDay = await stockExdividend(stockNo)
 
   //yield 殖利率
-  console.log('跑殖利率')
+  console.log('跑殖利率,股利,便宜昂貴價')
   const yield = await stockYield(stockNo,stockData,yieldValue)
   // result.exdividendAverage = yield['exdividendAverage']
   // result.exdividendBefore = yield['exdividendBefore']
@@ -382,13 +398,14 @@ async function stockGrap({stockNo,stockName,stockData,yieldValue,method}){
   // result.exdividendBefore2 = yield['exdividendBefore2']
   // result.monthYield = yield['monthYield']
   // result.threeMonthYield = yield['threeMonthYield']
-  result.halfYearYield = yield['halfYearYield']
-  result.nowYield = yield['nowYield']
-  result.yearYield = yield['yearYield']
-  result.yieldValue = yield['yearArray']
-  result.cheapPrice = yield['cheapPrice']
-  result.fairPrice = yield['fairPrice']
-  result.expensivePrice = yield['expensivePrice']
+  // result.halfYearYield = yield['halfYearYield']
+  // result.yearYield = yield['yearYield']
+  result.yieldValue = yield['yearArray'] //殖利率資料
+  result.cheapPrice = yield['cheapPrice'] //便宜 
+  result.fairPrice = yield['fairPrice'] //合理
+  result.expensivePrice = yield['expensivePrice'] //昂貴
+  result.nowYield = yield['nowYield'] //殖利率
+  result.exdividendAverage= yield['exdividendAverage'] //平均股利
   
 
   //kd
@@ -399,7 +416,7 @@ async function stockGrap({stockNo,stockName,stockData,yieldValue,method}){
   //   result.methodReturn = stockMethod({stockNo,stockName,method,stockData})
   // }
 
-  //console.log('result',result)
+ 
   return result
 }
 function stockGetkdData(stockData){

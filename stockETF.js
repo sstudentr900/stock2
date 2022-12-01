@@ -1,12 +1,13 @@
 const { googleSheetGetData } = require("./plugin/googleSheet");
 const { stockPromise,stockGrap } = require("./plugin/stock");
 
+//更新股票
 const updataStock = async(event)=>{
   const sheet = await googleSheetGetData('340899742').then(sheet=>sheet)
   const sheetData = await sheet.getRows();
   for (let [rowIndex, row] of sheetData.entries()) {
     const stockNames = row['stockName']
-    console.log(stockNames)
+    console.log('------'+stockNames+'------')
     if(!stockNames)continue;
     const stockNo = stockNames.split('(')[1].split(')')[0]
     const stockName = stockNames.split('(')[0]
@@ -30,15 +31,18 @@ const updataStock = async(event)=>{
     sheetData[rowIndex].twoYearPrice = stockRecult.twoYearPrice
     sheetData[rowIndex].threeYearPrice = stockRecult.threeYearPrice
     sheetData[rowIndex].nowYield = stockRecult.nowYield
-    sheetData[rowIndex].halfYearYield = stockRecult.halfYearYield
-    sheetData[rowIndex].yearYield = stockRecult.yearYield
+    sheetData[rowIndex].exdividendAverage = stockRecult.exdividendAverage
     sheetData[rowIndex].yieldValue = stockRecult.yieldValue
     sheetData[rowIndex].cheapPrice = stockRecult.cheapPrice
     sheetData[rowIndex].fairPrice = stockRecult.fairPrice
     sheetData[rowIndex].expensivePrice = stockRecult.expensivePrice
     sheetData[rowIndex].save()
+
+    console.log('完成')
   }
+  console.log('-----全部完成----')
 }
+//更新增加股票名
 const updataStockName = async(event)=>{
   const sheet = await googleSheetGetData('340899742').then(sheet=>sheet)
   const sheetData = await sheet.getRows();
