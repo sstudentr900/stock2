@@ -1,6 +1,7 @@
 const { googleSheetGetData } = require("./plugin/googleSheet");
 const { stockPromise,stockGrap } = require("./plugin/stock");
 
+//更新股票
 const updataStock = async(event)=>{
   const sheet = await googleSheetGetData('340899742').then(sheet=>sheet)
   const sheetData = await sheet.getRows();
@@ -20,11 +21,12 @@ const updataStock = async(event)=>{
   //跑全部
   for (let [rowIndex, row] of sheetData.entries()) {
     const stockNames = row['stockName']
-    console.log(stockNames)
+    console.log('------'+stockNames+'------')
     if(!stockNames)continue;
     const stockNo = stockNames.split('(')[1].split(')')[0]
     const stockName = stockNames.split('(')[0]
-    const stockData = row['stockData']?row['stockData']:''
+    // const stockData = row['stockData']?row['stockData']:''
+    const stockData = ''
     const yieldValue = row['yieldValue']?row['yieldValue']:''
     const method = row['method']?row['method']:''
     const stockRecult = await stockGrap({stockNo,stockName,yieldValue,stockData,method})
@@ -32,9 +34,10 @@ const updataStock = async(event)=>{
     // sheetData[rowIndex].stockName = stockName
     sheetData[rowIndex].stockNo = stockNo
     sheetData[rowIndex].price = stockRecult.price
-    sheetData[rowIndex].methodReturn = stockRecult.methodReturn
+    // sheetData[rowIndex].methodReturn = stockRecult.methodReturn
     sheetData[rowIndex].stockData = stockRecult.stockData
-    sheetData[rowIndex].volume = stockRecult.volume
+    sheetData[rowIndex].stockData_w = stockRecult.stockData_w
+    // sheetData[rowIndex].volume = stockRecult.volume
     sheetData[rowIndex].netWorth = stockRecult.netWorth
     sheetData[rowIndex].dayPrice = stockRecult.dayPrice
     sheetData[rowIndex].weekPrice = stockRecult.weekPrice
@@ -44,15 +47,20 @@ const updataStock = async(event)=>{
     sheetData[rowIndex].twoYearPrice = stockRecult.twoYearPrice
     sheetData[rowIndex].threeYearPrice = stockRecult.threeYearPrice
     sheetData[rowIndex].nowYield = stockRecult.nowYield
-    sheetData[rowIndex].halfYearYield = stockRecult.halfYearYield
-    sheetData[rowIndex].yearYield = stockRecult.yearYield
     sheetData[rowIndex].yieldValue = stockRecult.yieldValue
     sheetData[rowIndex].cheapPrice = stockRecult.cheapPrice
     sheetData[rowIndex].fairPrice = stockRecult.fairPrice
     sheetData[rowIndex].expensivePrice = stockRecult.expensivePrice
+    sheetData[rowIndex].exdividendAverage = stockRecult.exdividendAverage
+    sheetData[rowIndex].kdData = stockRecult.kdData
+    sheetData[rowIndex].kValue = stockRecult.kValue
     sheetData[rowIndex].save()
+
+    console.log('完成')
   }
+  console.log('-----全部完成----')
 }
+//更新增加股票名
 const updataStockName = async(event)=>{
   const sheet = await googleSheetGetData('340899742').then(sheet=>sheet)
   const sheetData = await sheet.getRows();

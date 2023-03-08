@@ -45,9 +45,19 @@ https://www.twse.com.tw/zh/page/trading/exchange/BWIBBU_d.html
 https://www.twse.com.tw/zh/page/trading/exchange/BWIBBU.html
 
 
-# 7%選股
+# 殖利率買賣法
 5年平均股利,7%殖利率買,小於5%開始賣,3%光光
 
+# 周kd買賣法
+K<20買
+
+# 周均買賣法
+突破13周均買,跌破52周均賣
+
+# 景氣訊號燈
+
+# 月kd買賣法
+Kd 50以下黃金交叉
 
 
 
