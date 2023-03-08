@@ -297,6 +297,7 @@ async function stockGrap({stockNo,stockName,stockData,yieldValue,method}){
         console.log('抓取不到資料跳出')
         return false;
       }
+      // console.log('抓取資料數',datas.length)
       const datasLastDate = datas[datas.length-1]['Date']
       //sheel和抓取最後一天日期不一樣
       if(sheelLastDate!=datasLastDate){
@@ -311,11 +312,10 @@ async function stockGrap({stockNo,stockName,stockData,yieldValue,method}){
       }
     }
 
-    // console.log('取得傳入的stockData',stockData.length)
-    if(stockData.length>900){
-      console.log('超過900筆 只取900筆',stockData.length)
-      //刪除第一筆
-      stockData.splice(0,1)
+    if(stockData.length>1200){
+      console.log('當前資料數加抓取資料數'+stockData.length+'超過1200筆')
+      //刪除筆數
+      stockData.splice(0,stockData.length-1200)
     }
     result.stockData = JSON.stringify(stockData)
   }

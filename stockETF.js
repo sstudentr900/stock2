@@ -4,6 +4,20 @@ const { stockPromise,stockGrap } = require("./plugin/stock");
 const updataStock = async(event)=>{
   const sheet = await googleSheetGetData('340899742').then(sheet=>sheet)
   const sheetData = await sheet.getRows();
+  //抓取單一個
+  // for (let [rowIndex, row] of sheetData.entries()) {
+  //   const stockNames = row['stockName']
+  //   if(stockNames=='富邦臺灣中小(00733)'){
+  //     console.log(stockNames)
+  //     const stockNo = stockNames.split('(')[1].split(')')[0]
+  //     const stockName = stockNames.split('(')[0]
+  //     const stockData = row['stockData']?row['stockData']:''
+  //     const yieldValue = row['yieldValue']?row['yieldValue']:''
+  //     const method = row['method']?row['method']:''
+  //     const stockRecult = await stockGrap({stockNo,stockName,yieldValue,stockData,method})
+  //   }
+  // }
+  //跑全部
   for (let [rowIndex, row] of sheetData.entries()) {
     const stockNames = row['stockName']
     console.log(stockNames)
