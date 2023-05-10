@@ -371,7 +371,7 @@ async function stockGrap({stockNo,stockName,stockData,yieldValue,method}){
   }
   if(!stockData){
     let starDay = `${year-5}-${month}-${day}`
-    console.log(`沒有資料抓取新資料 ${starDay} - ${endDay}`)
+    console.log(`沒有資料抓取前5年資料 ${starDay} - ${endDay}`)
     stockData = await stockGetData(stockNo,starDay,endDay)
     if(stockData.length){
       console.log('stockData,length:',stockData.length)
