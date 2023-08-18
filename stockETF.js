@@ -56,7 +56,7 @@ const updataStock = async(event)=>{
     sheetData[rowIndex].kValue = stockRecult.kValue
     sheetData[rowIndex].save()
 
-    console.log('完成')
+    console.log(stockNames+'完成')
   }
   console.log('-----全部完成----')
 }
